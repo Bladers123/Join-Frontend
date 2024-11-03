@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: summary.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: summary.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>let tasks = [];
+let user = [];
+
+/**
+ * Initializes the summary page by loading tasks and user data from storage, then displays task statistics and user greeting.
+ * @async
+ */
+async function initSummary() {
+    tasks = JSON.parse((await getItem("tasks")) || "[]");
+    user = JSON.parse((await getItem("user")) || "[]");
+    showAmounts();
+}
+
+/**
+ * Determines the appropriate greeting based on the current time.
+ * @returns {string} The greeting message.
+ */
+function getGreetingTime() {
+    let actualTime = new Date();
+    let time = actualTime.getHours();
+
+    if (time >= 5 &amp;&amp; time &lt; 11) {
+        return "Good morning";
+    } else if (time >= 11 &amp;&amp; time &lt; 17) {
+        return "Good afternoon";
+    } else if (time >= 17 &amp;&amp; time &lt; 23) {
+        return "Good evening";
+    } else {
+        return "Good night";
+    }
+}
+
+/**
+ * Calculates and displays the amount of tasks in each category, the total number of urgent tasks,
+ * the earliest due date among all tasks, and sets the greeting and user name on the summary page.
+ */
+function showAmounts() {
+    let toDos = [];
+    let feedbacks = [];
+    let dones = [];
+    let inProgresses = [];
+    let prioUrgent = [];
+    let earliestDueDate = null;
+    let newDate = null;
+
+    for (let t = 0; t &lt; tasks.length; t++) {
+        const task = tasks[t];
+        if (task.priority === "Urgent") prioUrgent.push(task.priority);
+
+        if (!earliestDueDate || task.dueDate &lt; earliestDueDate) earliestDueDate = task.dueDate;
+
+        newDate = getFormattedDate(earliestDueDate);
+        pushProgress(task, toDos, feedbacks, dones, inProgresses);
+    }
+    renderAllData(toDos, dones, feedbacks, inProgresses, prioUrgent, newDate);
+}
+
+/**
+ * Formats a date string into a more readable format.
+ * @param {string} earliestDueDate - The earliest due date in ISO string format.
+ * @returns {string} Formatted date string.
+ */
+function getFormattedDate(earliestDueDate) {
+    let date = new Date(earliestDueDate);
+    let formattedMonth = date.toLocaleString("default", { month: "long" });
+    let year = date.getFullYear();
+    let day = date.getDate();
+    let newDate = formattedMonth + " " + day + ", " + year;
+    return newDate;
+}
+
+/**
+ * Categorizes a task based on its progress status into one of the provided arrays.
+ * @param {Object} task - The task object to categorize.
+ * @param {Array} toDos - Array to accumulate tasks with 'toDo' progress.
+ * @param {Array} feedbacks - Array to accumulate tasks with 'feedback' progress.
+ * @param {Array} dones - Array to accumulate tasks with 'done' progress.
+ * @param {Array} inProgresses - Array to accumulate tasks with 'inProgress' progress.
+ */
+function pushProgress(task, toDos, feedbacks, dones, inProgresses) {
+    switch (task.progress) {
+        case "toDo":
+            toDos.push(task.progress);
+            break;
+        case "feedback":
+            feedbacks.push(task.progress);
+            break;
+        case "done":
+            dones.push(task.progress);
+            break;
+        case "inProgress":
+            inProgresses.push(task.progress);
+            break;
+        default:
+            break;
+    }
+}
+
+/**
+ * Renders task statistics and user information onto the summary page.
+ * @param {Array} toDos - Array of tasks with 'toDo' progress.
+ * @param {Array} dones - Array of tasks with 'done' progress.
+ * @param {Array} feedbacks - Array of tasks with 'feedback' progress.
+ * @param {Array} inProgresses - Array of tasks with 'inProgress' progress.
+ * @param {Array} prioUrgent - Array of tasks with 'Urgent' priority.
+ * @param {string} earliestDueDate - Formatted string of the earliest due date.
+ */
+function renderAllData(toDos, dones, feedbacks, inProgresses, prioUrgent, earliestDueDate) {
+    document.getElementById("to-do-amount").innerHTML = toDos.length;
+    document.getElementById("done-amount").innerHTML = dones.length;
+    document.getElementById("feedback-amount").innerHTML = feedbacks.length;
+    document.getElementById("progress-amount").innerHTML = inProgresses.length;
+    document.getElementById("tasks-amount").innerHTML = tasks.length;
+    document.getElementById("font-urgent-number").innerHTML = prioUrgent.length;
+    document.getElementById("earliest-due-date").innerHTML = earliestDueDate;
+    document.getElementById("greet-time").innerHTML = getGreetingTime();
+    if (user.name) {
+        document.getElementById("greet-user").innerHTML = user.name;
+    } else {
+        document.getElementById("greet-user").innerHTML = "Guest";
+    }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#STORAGE_TOKEN">STORAGE_TOKEN</a></li><li><a href="global.html#STORAGE_URL">STORAGE_URL</a></li><li><a href="global.html#addSubtask">addSubtask</a></li><li><a href="global.html#addTaskTemplate">addTaskTemplate</a></li><li><a href="global.html#allowDrop">allowDrop</a></li><li><a href="global.html#assigneds">assigneds</a></li><li><a href="global.html#backToLogIn">backToLogIn</a></li><li><a href="global.html#categories">categories</a></li><li><a href="global.html#clearTask">clearTask</a></li><li><a href="global.html#closeCardModal">closeCardModal</a></li><li><a href="global.html#closeCheckBoxAreaForAssigned">closeCheckBoxAreaForAssigned</a></li><li><a href="global.html#closeCheckBoxAreaForCategory">closeCheckBoxAreaForCategory</a></li><li><a href="global.html#closeContact">closeContact</a></li><li><a href="global.html#closePopUp">closePopUp</a></li><li><a href="global.html#createContact">createContact</a></li><li><a href="global.html#createTask">createTask</a></li><li><a href="global.html#createdFromBoard">createdFromBoard</a></li><li><a href="global.html#currentDraggedElement">currentDraggedElement</a></li><li><a href="global.html#currentTaskModal">currentTaskModal</a></li><li><a href="global.html#deleteContact">deleteContact</a></li><li><a href="global.html#deleteSubTask">deleteSubTask</a></li><li><a href="global.html#deleteTask">deleteTask</a></li><li><a href="global.html#editAssignsArray">editAssignsArray</a></li><li><a href="global.html#editContact">editContact</a></li><li><a href="global.html#editSubTask">editSubTask</a></li><li><a href="global.html#editSubTaskClick">editSubTaskClick</a></li><li><a href="global.html#editSubtasksArray">editSubtasksArray</a></li><li><a href="global.html#editTask">editTask</a></li><li><a href="global.html#editTaskTemplate">editTaskTemplate</a></li><li><a href="global.html#generateEditContactHTML">generateEditContactHTML</a></li><li><a href="global.html#generateEditSubtasksHTML">generateEditSubtasksHTML</a></li><li><a href="global.html#generateHTMLshowContact">generateHTMLshowContact</a></li><li><a href="global.html#generateRegisterHTML">generateRegisterHTML</a></li><li><a href="global.html#generateTaskTemplateHTML">generateTaskTemplateHTML</a></li><li><a href="global.html#generateTodoCardModal">generateTodoCardModal</a></li><li><a href="global.html#generateTodoHTML">generateTodoHTML</a></li><li><a href="global.html#generateTodoSubtask">generateTodoSubtask</a></li><li><a href="global.html#getAssignedToTemplate">getAssignedToTemplate</a></li><li><a href="global.html#getCeckBoxAreaTemplateForCategory">getCeckBoxAreaTemplateForCategory</a></li><li><a href="global.html#getCheckBoxAreaTemplateForAssigned">getCheckBoxAreaTemplateForAssigned</a></li><li><a href="global.html#getCircleTemplate">getCircleTemplate</a></li><li><a href="global.html#getFormattedDate">getFormattedDate</a></li><li><a href="global.html#getGreetingTime">getGreetingTime</a></li><li><a href="global.html#getItem">getItem</a></li><li><a href="global.html#getPopUpTemplate">getPopUpTemplate</a></li><li><a href="global.html#getPrioLowSVG">getPrioLowSVG</a></li><li><a href="global.html#getPrioMediumSVG">getPrioMediumSVG</a></li><li><a href="global.html#getPrioSVG">getPrioSVG</a></li><li><a href="global.html#getPrioUrgentSVG">getPrioUrgentSVG</a></li><li><a href="global.html#getSelectedAssigneds">getSelectedAssigneds</a></li><li><a href="global.html#getSubtasksTemplate">getSubtasksTemplate</a></li><li><a href="global.html#getTaskData">getTaskData</a></li><li><a href="global.html#getTaskTemplate">getTaskTemplate</a></li><li><a href="global.html#getUpdatedSubtasks">getUpdatedSubtasks</a></li><li><a href="global.html#getVariablesToRender">getVariablesToRender</a></li><li><a href="global.html#guestLogIn">guestLogIn</a></li><li><a href="global.html#handleSearchChange">handleSearchChange</a></li><li><a href="global.html#highlight">highlight</a></li><li><a href="global.html#includeHTML">includeHTML</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#initBoard">initBoard</a></li><li><a href="global.html#initContacts">initContacts</a></li><li><a href="global.html#initLogIn">initLogIn</a></li><li><a href="global.html#initRegister">initRegister</a></li><li><a href="global.html#initSummary">initSummary</a></li><li><a href="global.html#initTask">initTask</a></li><li><a href="global.html#isCategoryValidated">isCategoryValidated</a></li><li><a href="global.html#isPasswordConfirmed">isPasswordConfirmed</a></li><li><a href="global.html#letters">letters</a></li><li><a href="global.html#loadAddTaskTemplate">loadAddTaskTemplate</a></li><li><a href="global.html#loadUsers">loadUsers</a></li><li><a href="global.html#logIn">logIn</a></li><li><a href="global.html#moveTo">moveTo</a></li><li><a href="global.html#navToSignIn">navToSignIn</a></li><li><a href="global.html#oldContacts">oldContacts</a></li><li><a href="global.html#openCardModal">openCardModal</a></li><li><a href="global.html#openContact">openContact</a></li><li><a href="global.html#openMobileName">openMobileName</a></li><li><a href="global.html#openOrCloseCheckBoxAreaForAssigned">openOrCloseCheckBoxAreaForAssigned</a></li><li><a href="global.html#openOrCloseCheckBoxAreaForCategory">openOrCloseCheckBoxAreaForCategory</a></li><li><a href="global.html#openPopUp">openPopUp</a></li><li><a href="global.html#progress">progress</a></li><li><a href="global.html#pushProgress">pushProgress</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#removeHighlight">removeHighlight</a></li><li><a href="global.html#renderAllData">renderAllData</a></li><li><a href="global.html#renderContactToRegister">renderContactToRegister</a></li><li><a href="global.html#renderOldContacts">renderOldContacts</a></li><li><a href="global.html#rotateIcon">rotateIcon</a></li><li><a href="global.html#saveContact">saveContact</a></li><li><a href="global.html#saveEditTask">saveEditTask</a></li><li><a href="global.html#saveEditedSubTask">saveEditedSubTask</a></li><li><a href="global.html#selectAssignedPersons">selectAssignedPersons</a></li><li><a href="global.html#selectedCategoryItem">selectedCategoryItem</a></li><li><a href="global.html#selectedContactIndex">selectedContactIndex</a></li><li><a href="global.html#selectedName">selectedName</a></li><li><a href="global.html#sendToBackend">sendToBackend</a></li><li><a href="global.html#setActiveButton">setActiveButton</a></li><li><a href="global.html#setBackgroundToActiveSideBar">setBackgroundToActiveSideBar</a></li><li><a href="global.html#setEditValuesOfTaskModal">setEditValuesOfTaskModal</a></li><li><a href="global.html#setItem">setItem</a></li><li><a href="global.html#setUserInitialsInHeaderTemplateButton">setUserInitialsInHeaderTemplateButton</a></li><li><a href="global.html#showAmounts">showAmounts</a></li><li><a href="global.html#showContact">showContact</a></li><li><a href="global.html#startDragging">startDragging</a></li><li><a href="global.html#subtaskId">subtaskId</a></li><li><a href="global.html#tasks">tasks</a></li><li><a href="global.html#toggleActiveAssignedItem">toggleActiveAssignedItem</a></li><li><a href="global.html#toggleContact">toggleContact</a></li><li><a href="global.html#toggleSubtaskCompleted">toggleSubtaskCompleted</a></li><li><a href="global.html#updateActiveInitialCircles">updateActiveInitialCircles</a></li><li><a href="global.html#updateAssignedItemsUI">updateAssignedItemsUI</a></li><li><a href="global.html#updateFilteredTasks">updateFilteredTasks</a></li><li><a href="global.html#updateTasks">updateTasks</a></li><li><a href="global.html#user">user</a></li><li><a href="global.html#users">users</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Thu Feb 29 2024 08:57:13 GMT+0100 (Central European Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

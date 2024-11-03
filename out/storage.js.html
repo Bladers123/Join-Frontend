@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: storage.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: storage.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Constant token for storage access authorization.
+ * @type {string}
+ */
+const STORAGE_TOKEN = "HEBY7BJY7CQ0IQVYI4ONXU7EY6B8UWVM7BGO8RTP";
+
+/**
+ * Base URL of the remote storage API.
+ * @type {string}
+ */
+const STORAGE_URL = "https://remote-storage.developerakademie.org/item";
+
+/**
+ * Asynchronously stores a key-value pair in remote storage.
+ * The data is sent as a JSON payload in a POST request to the storage API.
+ *
+ * @param {string} key - The key under which the value is stored.
+ * @param {string|object} value - The value to store, which can be a string or any object (object must be serializable to JSON).
+ * @returns {Promise&lt;object>} A promise that resolves with the response from the storage API.
+ * @async
+ * @example
+ * await setItem('user', JSON.stringify({ name: 'Jane Doe', email: 'jane.doe@example.com' }));
+ */
+async function setItem(key, value) {
+    const payload = { key, value, token: STORAGE_TOKEN };
+    try {
+        return fetch(STORAGE_URL, { method: "POST", body: JSON.stringify(payload) }).then((response) => response.json());
+    } catch (error) {
+        console.error("Fehler beim Setzen des Items:", error);
+    }
+}
+
+/**
+ * Asynchronously retrieves the value associated with a given key from remote storage.
+ * The request is made by appending the key and token as query parameters to the GET request.
+ *
+ * @param {string} key - The key for which to retrieve the associated value.
+ * @returns {Promise&lt;string|object>} A promise that resolves with the value associated with the specified key.
+ * @async
+ * @example
+ * const user = await getItem('user');
+ */
+async function getItem(key) {
+    const url = `${STORAGE_URL}?key=${key}&amp;token=${STORAGE_TOKEN}`;
+    try {
+        return fetch(url)
+            .then((response) => response.json())
+            .then((responseAsJson) => responseAsJson.data.value);
+    } catch (error) {
+        console.error("Fehler beim Abrufen des Items:", error);
+    }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#STORAGE_TOKEN">STORAGE_TOKEN</a></li><li><a href="global.html#STORAGE_URL">STORAGE_URL</a></li><li><a href="global.html#addSubtask">addSubtask</a></li><li><a href="global.html#addTaskTemplate">addTaskTemplate</a></li><li><a href="global.html#allowDrop">allowDrop</a></li><li><a href="global.html#assigneds">assigneds</a></li><li><a href="global.html#backToLogIn">backToLogIn</a></li><li><a href="global.html#categories">categories</a></li><li><a href="global.html#clearTask">clearTask</a></li><li><a href="global.html#closeCardModal">closeCardModal</a></li><li><a href="global.html#closeCheckBoxAreaForAssigned">closeCheckBoxAreaForAssigned</a></li><li><a href="global.html#closeCheckBoxAreaForCategory">closeCheckBoxAreaForCategory</a></li><li><a href="global.html#closeContact">closeContact</a></li><li><a href="global.html#closePopUp">closePopUp</a></li><li><a href="global.html#createContact">createContact</a></li><li><a href="global.html#createTask">createTask</a></li><li><a href="global.html#createdFromBoard">createdFromBoard</a></li><li><a href="global.html#currentDraggedElement">currentDraggedElement</a></li><li><a href="global.html#currentTaskModal">currentTaskModal</a></li><li><a href="global.html#deleteContact">deleteContact</a></li><li><a href="global.html#deleteSubTask">deleteSubTask</a></li><li><a href="global.html#deleteTask">deleteTask</a></li><li><a href="global.html#editAssignsArray">editAssignsArray</a></li><li><a href="global.html#editContact">editContact</a></li><li><a href="global.html#editSubTask">editSubTask</a></li><li><a href="global.html#editSubTaskClick">editSubTaskClick</a></li><li><a href="global.html#editSubtasksArray">editSubtasksArray</a></li><li><a href="global.html#editTask">editTask</a></li><li><a href="global.html#editTaskTemplate">editTaskTemplate</a></li><li><a href="global.html#generateEditContactHTML">generateEditContactHTML</a></li><li><a href="global.html#generateEditSubtasksHTML">generateEditSubtasksHTML</a></li><li><a href="global.html#generateHTMLshowContact">generateHTMLshowContact</a></li><li><a href="global.html#generateRegisterHTML">generateRegisterHTML</a></li><li><a href="global.html#generateTaskTemplateHTML">generateTaskTemplateHTML</a></li><li><a href="global.html#generateTodoCardModal">generateTodoCardModal</a></li><li><a href="global.html#generateTodoHTML">generateTodoHTML</a></li><li><a href="global.html#generateTodoSubtask">generateTodoSubtask</a></li><li><a href="global.html#getAssignedToTemplate">getAssignedToTemplate</a></li><li><a href="global.html#getCeckBoxAreaTemplateForCategory">getCeckBoxAreaTemplateForCategory</a></li><li><a href="global.html#getCheckBoxAreaTemplateForAssigned">getCheckBoxAreaTemplateForAssigned</a></li><li><a href="global.html#getCircleTemplate">getCircleTemplate</a></li><li><a href="global.html#getFormattedDate">getFormattedDate</a></li><li><a href="global.html#getGreetingTime">getGreetingTime</a></li><li><a href="global.html#getItem">getItem</a></li><li><a href="global.html#getPopUpTemplate">getPopUpTemplate</a></li><li><a href="global.html#getPrioLowSVG">getPrioLowSVG</a></li><li><a href="global.html#getPrioMediumSVG">getPrioMediumSVG</a></li><li><a href="global.html#getPrioSVG">getPrioSVG</a></li><li><a href="global.html#getPrioUrgentSVG">getPrioUrgentSVG</a></li><li><a href="global.html#getSelectedAssigneds">getSelectedAssigneds</a></li><li><a href="global.html#getSubtasksTemplate">getSubtasksTemplate</a></li><li><a href="global.html#getTaskData">getTaskData</a></li><li><a href="global.html#getTaskTemplate">getTaskTemplate</a></li><li><a href="global.html#getUpdatedSubtasks">getUpdatedSubtasks</a></li><li><a href="global.html#getVariablesToRender">getVariablesToRender</a></li><li><a href="global.html#guestLogIn">guestLogIn</a></li><li><a href="global.html#handleSearchChange">handleSearchChange</a></li><li><a href="global.html#highlight">highlight</a></li><li><a href="global.html#includeHTML">includeHTML</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#initBoard">initBoard</a></li><li><a href="global.html#initContacts">initContacts</a></li><li><a href="global.html#initLogIn">initLogIn</a></li><li><a href="global.html#initRegister">initRegister</a></li><li><a href="global.html#initSummary">initSummary</a></li><li><a href="global.html#initTask">initTask</a></li><li><a href="global.html#isCategoryValidated">isCategoryValidated</a></li><li><a href="global.html#isPasswordConfirmed">isPasswordConfirmed</a></li><li><a href="global.html#letters">letters</a></li><li><a href="global.html#loadAddTaskTemplate">loadAddTaskTemplate</a></li><li><a href="global.html#loadUsers">loadUsers</a></li><li><a href="global.html#logIn">logIn</a></li><li><a href="global.html#moveTo">moveTo</a></li><li><a href="global.html#navToSignIn">navToSignIn</a></li><li><a href="global.html#oldContacts">oldContacts</a></li><li><a href="global.html#openCardModal">openCardModal</a></li><li><a href="global.html#openContact">openContact</a></li><li><a href="global.html#openMobileName">openMobileName</a></li><li><a href="global.html#openOrCloseCheckBoxAreaForAssigned">openOrCloseCheckBoxAreaForAssigned</a></li><li><a href="global.html#openOrCloseCheckBoxAreaForCategory">openOrCloseCheckBoxAreaForCategory</a></li><li><a href="global.html#openPopUp">openPopUp</a></li><li><a href="global.html#progress">progress</a></li><li><a href="global.html#pushProgress">pushProgress</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#removeHighlight">removeHighlight</a></li><li><a href="global.html#renderAllData">renderAllData</a></li><li><a href="global.html#renderContactToRegister">renderContactToRegister</a></li><li><a href="global.html#renderOldContacts">renderOldContacts</a></li><li><a href="global.html#rotateIcon">rotateIcon</a></li><li><a href="global.html#saveContact">saveContact</a></li><li><a href="global.html#saveEditTask">saveEditTask</a></li><li><a href="global.html#saveEditedSubTask">saveEditedSubTask</a></li><li><a href="global.html#selectAssignedPersons">selectAssignedPersons</a></li><li><a href="global.html#selectedCategoryItem">selectedCategoryItem</a></li><li><a href="global.html#selectedContactIndex">selectedContactIndex</a></li><li><a href="global.html#selectedName">selectedName</a></li><li><a href="global.html#sendToBackend">sendToBackend</a></li><li><a href="global.html#setActiveButton">setActiveButton</a></li><li><a href="global.html#setBackgroundToActiveSideBar">setBackgroundToActiveSideBar</a></li><li><a href="global.html#setEditValuesOfTaskModal">setEditValuesOfTaskModal</a></li><li><a href="global.html#setItem">setItem</a></li><li><a href="global.html#setUserInitialsInHeaderTemplateButton">setUserInitialsInHeaderTemplateButton</a></li><li><a href="global.html#showAmounts">showAmounts</a></li><li><a href="global.html#showContact">showContact</a></li><li><a href="global.html#startDragging">startDragging</a></li><li><a href="global.html#subtaskId">subtaskId</a></li><li><a href="global.html#tasks">tasks</a></li><li><a href="global.html#toggleActiveAssignedItem">toggleActiveAssignedItem</a></li><li><a href="global.html#toggleContact">toggleContact</a></li><li><a href="global.html#toggleSubtaskCompleted">toggleSubtaskCompleted</a></li><li><a href="global.html#updateActiveInitialCircles">updateActiveInitialCircles</a></li><li><a href="global.html#updateAssignedItemsUI">updateAssignedItemsUI</a></li><li><a href="global.html#updateFilteredTasks">updateFilteredTasks</a></li><li><a href="global.html#updateTasks">updateTasks</a></li><li><a href="global.html#user">user</a></li><li><a href="global.html#users">users</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Thu Feb 29 2024 08:57:13 GMT+0100 (Central European Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

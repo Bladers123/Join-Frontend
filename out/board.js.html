@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: board.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: board.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Array to store task objects.
+ * @type {Array}
+ */
+let tasks = [];
+
+/**
+ * Identifier for the currently dragged task element.
+ * @type {string|number}
+ */
+let currentDraggedElement;
+
+/**
+ * Stores the current task modal information.
+ * @type {Array}
+ */
+let currentTaskModal = [];
+
+/**
+ * Initializes the task board by loading tasks from storage and updating the UI.
+ * @async
+ */
+async function initBoard() {
+    tasks = JSON.parse((await getItem("tasks")) || "[]");
+    updateTasks();
+}
+
+/**
+ * Sets up event listeners after the DOM content is fully loaded.
+ */
+document.addEventListener("DOMContentLoaded", function () {
+    document.body.addEventListener("click", function (event) {
+        if (event.target.id === "cardModal" || event.target.closest("#cardModal")) {
+            let isClickOnOpenTask = event.target.classList.contains("openTask") || event.target.closest(".openTask") !== null;
+            if (!isClickOnOpenTask) {
+                closeCardModal("cardModal-container");
+            }
+        }
+
+        if (event.target.id === "addTaskModal" || event.target.closest("#addTaskModal")) {
+            let isClickInsideAddTaskTemplateContent = event.target.id === "addTaskTemplateContent" || event.target.closest("#addTaskTemplateContent") !== null;
+            if (!isClickInsideAddTaskTemplateContent) {
+                closeCardModal("addTaskModal");
+            }
+        }
+    });
+});
+
+/**
+ * Updates the tasks displayed on the board.
+ * @async
+ */
+async function updateTasks() {
+    let sections = {
+        toDo: document.getElementById("toDo"),
+        inProgress: document.getElementById("inProgress"),
+        feedback: document.getElementById("feedback"),
+        done: document.getElementById("done"),
+    };
+
+    document.getElementById("toDo").innerHTML = "";
+    document.getElementById("inProgress").innerHTML = "";
+    document.getElementById("feedback").innerHTML = "";
+    document.getElementById("done").innerHTML = "";
+
+    tasks.forEach((task) => {
+        let taskTemplate = generateTodoHTML(task);
+        sections[task.progress].innerHTML += taskTemplate;
+    });
+}
+
+/**
+ * Initiates the dragging of a task card.
+ * @param {string|number} id - The identifier of the task being dragged.
+ */
+function startDragging(id) {
+    currentDraggedElement = id;
+}
+
+/**
+ * Allows a drop action on a drop target, preventing the default handling.
+ * @param {Event} event - The dragover event.
+ */
+function allowDrop(event) {
+    event.preventDefault();
+}
+
+/**
+ * Moves a task to a specified category/progress section.
+ * @param {string} category - The category to move the task to.
+ * @async
+ */
+async function moveTo(category) {
+    let foundIndex = tasks.findIndex((task) => task.id === currentDraggedElement);
+    if (foundIndex !== -1) tasks[foundIndex].progress = category;
+    else {
+        console.error("Element nicht gefunden in tasks");
+        return;
+    }
+    updateTasks();
+    await setItem("tasks", JSON.stringify(tasks));
+}
+
+/**
+ * Generates HTML content for a task card.
+ * @param {Object} task - The task object to generate HTML for.
+ * @returns {string} The generated HTML string for the task card.
+ */
+function generateTodoHTML(task) {
+    let circleTemplate = getCircleTemplate(task);
+    let prioSVG = getPrioSVG(task);
+    let totalSubtasks = task.subtasks.length;
+    let completedSubtasks = task.subtasks.filter((subtask) => subtask.completed).length;
+    let progressValue = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
+
+    let subTaskWrapperHTML = totalSubtasks > 0 ? generateTodoSubtask(progressValue, completedSubtasks, totalSubtasks) : "";
+    return generateTodoCardModal(task, subTaskWrapperHTML, circleTemplate, prioSVG);
+}
+
+/**
+ * Returns the HTML string for the circle template showing assigned users' initials.
+ * @param {Object} task - The task containing assignedTo data.
+ * @returns {string} HTML string representing circles with initials of assigned users.
+ */
+function getCircleTemplate(task) {
+    return task.assignedTo
+        .map((person) => {
+            let initials = person.name
+                .split(" ")
+                .map((namePart) => namePart.charAt(0))
+                .join("");
+            let backgroundColor = person.bg ? ` style="background-color: ${person.bg};"` : "";
+            return `&lt;div class="profileBadge"${backgroundColor}>${initials}&lt;/div>`;
+        })
+        .join("");
+}
+
+/**
+ * Returns the SVG HTML string based on the priority of the task.
+ * @param {Object} task - The task object with a priority property.
+ * @returns {string} HTML string of the SVG for the task's priority.
+ */
+function getPrioSVG(task) {
+    switch (task.priority) {
+        case "Low":
+            return getPrioLowSVG();
+        case "Medium":
+            return getPrioMediumSVG();
+        case "Urgent":
+            return getPrioUrgentSVG();
+        default:
+            return "";
+    }
+}
+
+/**
+ * Filters tasks based on a search text and updates the UI to show only matching tasks.
+ * @param {string} searchText - The text to filter tasks by.
+ */
+function handleSearchChange(searchText) {
+    if (searchText.trim() === "") {
+        updateTasks();
+    } else {
+        let filteredTasks = tasks.filter((task) => task.title.toLowerCase().includes(searchText.toLowerCase()) || task.description.toLowerCase().includes(searchText.toLowerCase()));
+        updateFilteredTasks(filteredTasks);
+    }
+}
+
+/**
+ * Updates the task board with a filtered list of tasks.
+ * @param {Array} filteredTasks - The tasks that match the filter criteria.
+ */
+function updateFilteredTasks(filteredTasks) {
+    let sections = {
+        toDo: document.getElementById("toDo"),
+        inProgress: document.getElementById("inProgress"),
+        feedback: document.getElementById("feedback"),
+        done: document.getElementById("done"),
+    };
+
+    Object.keys(sections).forEach((section) => {
+        sections[section].innerHTML = "";
+    });
+
+    filteredTasks.forEach((task) => {
+        let taskTemplate = generateTodoHTML(task);
+        if (sections[task.progress]) {
+            sections[task.progress].innerHTML += taskTemplate;
+        }
+    });
+}
+
+/**
+ * Highlights a task card by adding a CSS class.
+ * @param {string} id - The ID of the task card to highlight.
+ */
+function highlight(id) {
+    document.getElementById(id).classList.add("contentContainerHover");
+}
+
+/**
+ * Removes the highlight from a task card by removing a CSS class.
+ * @param {string} id - The ID of the task card to remove the highlight from.
+ */
+function removeHighlight(id) {
+    document.getElementById(id).classList.remove("contentContainerHover");
+}
+
+/**
+ * Closes a card modal by adding a CSS class to hide it.
+ * @param {string} id - The ID of the modal to close.
+ */
+function closeCardModal(id) {
+    document.getElementById(id).classList.add("d-none");
+    document.body.style.overflow = "";
+}
+
+/**
+ * Opens a card modal by populating it with task details and disabling body scroll.
+ * @param {string|number} taskId - The identifier of the task to display in the modal.
+ */
+function openCardModal(taskId) {
+    let task = tasks.find((task) => task.id.toString() === taskId.toString());
+    if (task) {
+        document.getElementById("cardModalID").innerHTML = getTaskTemplate(task);
+        document.body.style.overflow = "hidden";
+    } else console.error("Task nicht gefunden");
+}
+
+/**
+ * Generates HTML for displaying assigned users in the task modal.
+ * @param {Array} assignedTo - The array of assigned users for the task.
+ * @returns {string} HTML string for displaying assigned users.
+ */
+function getAssignedToTemplate(assignedTo) {
+    return assignedTo
+        .map((person) => {
+            let initials = person.name
+                .split(" ")
+                .map((name) => name[0])
+                .join("");
+            return /*html*/ `
+            &lt;div class="assignedContact">
+                &lt;div class="nameCircleWrapper">
+                    &lt;div class="nameCircle" style="background-color: ${person.bg};">${initials}&lt;/div>
+                    &lt;p class="assignedName">${person.name}&lt;/p>
+                &lt;/div>
+            &lt;/div>
+        `;
+        })
+        .join("");
+}
+
+/**
+ * Generates HTML for displaying subtasks in the task modal.
+ * @param {Array} subtasks - The subtasks of the task.
+ * @param {string|number} taskId - The identifier of the task.
+ * @returns {string} HTML string for displaying subtasks.
+ */
+function getSubtasksTemplate(subtasks, taskId) {
+    return subtasks
+        .map((subtask) => {
+            const isChecked = subtask.completed ? "checked" : "";
+            return /*html*/ `
+            &lt;div class="subtask">
+                &lt;input class="checkbox" type="checkbox" ${isChecked} onclick="toggleSubtaskCompleted(${taskId}, ${subtask.id})"/>
+                &lt;div class="checkboxDescription">${subtask.title}&lt;/div>
+            &lt;/div>
+            `;
+        })
+        .join("");
+}
+
+/**
+ * Toggles the completed state of a subtask and updates the task storage.
+ * @param {string|number} taskId - The identifier of the parent task.
+ * @param {string|number} subtaskId - The identifier of the subtask.
+ * @async
+ */
+async function toggleSubtaskCompleted(taskId, subtaskId) {
+    let taskIndex = tasks.findIndex((task) => task.id === taskId);
+    if (taskIndex !== -1) {
+        let subtaskIndex = tasks[taskIndex].subtasks.findIndex((subtask) => subtask.id === subtaskId);
+        if (subtaskIndex !== -1) {
+            tasks[taskIndex].subtasks[subtaskIndex].completed = !tasks[taskIndex].subtasks[subtaskIndex].completed;
+            await setItem("tasks", JSON.stringify(tasks));
+            updateTasks();
+        }
+    }
+}
+
+/**
+ * Generates the HTML template for displaying a task's details in a modal.
+ * @param {Object} task - The task object to display.
+ * @returns {string} The HTML template for the task's details.
+ */
+function getTaskTemplate(task) {
+    let assignedToHtml = getAssignedToTemplate(task.assignedTo);
+    let subtasksHtml = getSubtasksTemplate(task.subtasks, task.id);
+    let prioSVG = getPrioSVG(task);
+    currentTaskModal = task;
+    return generateTaskTemplateHTML(task, assignedToHtml, subtasksHtml, prioSVG);
+}
+
+/**
+ * Deletes a task from the board and updates the storage.
+ * @param {string|number} taskId - The identifier of the task to delete.
+ * @async
+ */
+async function deleteTask(taskId) {
+    closeCardModal("cardModal-container");
+    tasks = tasks.filter((task) => task.id !== taskId);
+    await setItem("tasks", JSON.stringify(tasks));
+    updateTasks();
+}
+
+/**
+ * Prepares and displays the add task template in a modal.
+ * @param {string} progress - The initial progress state for the new task.
+ * @async
+ */
+async function loadAddTaskTemplate(progress) {
+    document.body.style.overflow = "hidden";
+    document.getElementById("addTaskModalID").innerHTML = addTaskTemplate();
+    await initTask(progress);
+    createdFromBoard = true;
+    console.log(createdFromBoard);
+}
+
+/**
+ * Prepares and displays the edit task template in a modal.
+ * @async
+ */
+async function editTask() {
+    await initTask("noProgress");
+    document.getElementById("cardModal-container").innerHTML = editTaskTemplate();
+    setEditValuesOfTaskModal();
+    rotateIcon("nav-image-assigned");
+}
+
+/**
+ * Sets the input fields in the edit task modal with the current task's data.
+ */
+function setEditValuesOfTaskModal() {
+    document.getElementById("input-title").value = currentTaskModal.title;
+    document.getElementById("textArea-description").value = currentTaskModal.description;
+    document.getElementById("input-due-date").value = currentTaskModal.dueDate;
+    selectAssignedPersons();
+    updateAssignedItemsUI();
+    editAssignsArray();
+    editSubtasksArray();
+    document.getElementById("medium-button-id").classList.add("active");
+}
+
+/**
+ * Saves the edited task details to storage and updates the task board UI.
+ * @async
+ */
+async function saveEditTask() {
+    let taskUpdated = false;
+    let updatedTask = null;
+
+    for (let i = 0; i &lt; tasks.length; i++) {
+        let task = tasks[i];
+        if (task.id === currentTaskModal.id) {
+            task.title = document.getElementById("input-title").value;
+            task.description = document.getElementById("textArea-description").value;
+            task.dueDate = document.getElementById("input-due-date").value;
+            task.priority = document.querySelector(".prioButtons button.active").innerText.trim();
+            task.subtasks = getUpdatedSubtasks();
+            task.assignedTo = getSelectedAssigneds();
+            taskUpdated = true;
+            updatedTask = task;
+            break;
+        }
+    }
+
+    if (taskUpdated) {
+        await setItem("tasks", JSON.stringify(tasks));
+        updateTasks();
+        document.getElementById("cardModalID").innerHTML = getTaskTemplate(updatedTask);
+        console.log(updatedTask);
+    }
+}
+
+/**
+ * Returns an array of selected (assigned) users based on the user selection in the UI.
+ * @returns {Array&lt;Object>} Array of selected users with their name and background color.
+ */
+function getSelectedAssigneds() {
+    return assigneds
+        .filter((assigned) => assigned.selected)
+        .map((assigned) => {
+            return {
+                name: assigned.name,
+                bg: assigned.bg,
+            };
+        });
+}
+
+/**
+ * Returns an array of updated subtasks based on user input in the UI.
+ * @returns {Array&lt;Object>} Array of updated subtasks.
+ */
+function getUpdatedSubtasks() {
+    let updatedSubtasks = [];
+    let subtaskElements = document.querySelectorAll(".new-subtask-text");
+    subtaskElements.forEach((element, index) => {
+        updatedSubtasks.push({ id: index + 1, title: element.textContent, completed: false });
+    });
+    return updatedSubtasks;
+}
+
+/**
+ * Selects assigned persons based on the current task modal's assignedTo data.
+ */
+function selectAssignedPersons() {
+    if (currentTaskModal.assignedTo &amp;&amp; currentTaskModal.assignedTo.length > 0) {
+        currentTaskModal.assignedTo.forEach((assignedContact) => {
+            let found = assigneds.find((assigned) => assigned.name.trim() === assignedContact.name.trim());
+            if (found) {
+                found.selected = true;
+            }
+        });
+    }
+}
+
+/**
+ * Updates the UI to reflect the current task's assigned users.
+ */
+function updateAssignedItemsUI() {
+    assigneds.forEach((assigned) => {
+        if (assigned.selected) {
+            let element = document.querySelector(`.assigned-item[data-name="${assigned.name}"]`);
+            if (element) {
+                let checkbox = element.querySelector(".checkbox");
+                checkbox.checked = true;
+                element.classList.add("active");
+            }
+        }
+    });
+
+    updateActiveInitialCircles();
+}
+
+/**
+ * Prepares the assigns array for editing, reflecting the current task's assigned users.
+ */
+function editAssignsArray() {
+    let assigns = currentTaskModal["assignedTo"];
+    let assignsContainer = document.getElementById("selectedUserCircle");
+    assignsContainer.innerHTML = "";
+
+    for (let a = 0; a &lt; assigns.length; a++) {
+        const assign = assigns[a];
+        let editAssign = assign["name"];
+        let editColor = assign["bg"];
+        let initials = editAssign
+            .split(" ")
+            .map((editAssign) => editAssign[0])
+            .join("");
+
+        assignsContainer.innerHTML += `&lt;div class="editCircleStyle">
+        &lt;div class="editprofileBadge" style="background-color:${editColor}">${initials}&lt;/div>
+        `;
+    }
+}
+
+/**
+ * Prepares the subtasks array for editing, reflecting the current task's subtasks.
+ */
+function editSubtasksArray() {
+    let subtasks = currentTaskModal.subtasks;
+    let subtaskContainer = document.getElementById("subtasks");
+    subtaskContainer.innerHTML = "";
+    for (let i = 0; i &lt; subtasks.length; i++) {
+        let subtask = subtasks[i];
+        let editSubtask = subtask.title;
+        subtaskContainer.innerHTML += generateEditSubtasksHTML(subtask.id, editSubtask);
+    }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#STORAGE_TOKEN">STORAGE_TOKEN</a></li><li><a href="global.html#STORAGE_URL">STORAGE_URL</a></li><li><a href="global.html#addSubtask">addSubtask</a></li><li><a href="global.html#addTaskTemplate">addTaskTemplate</a></li><li><a href="global.html#allowDrop">allowDrop</a></li><li><a href="global.html#assigneds">assigneds</a></li><li><a href="global.html#backToLogIn">backToLogIn</a></li><li><a href="global.html#categories">categories</a></li><li><a href="global.html#clearTask">clearTask</a></li><li><a href="global.html#closeCardModal">closeCardModal</a></li><li><a href="global.html#closeCheckBoxAreaForAssigned">closeCheckBoxAreaForAssigned</a></li><li><a href="global.html#closeCheckBoxAreaForCategory">closeCheckBoxAreaForCategory</a></li><li><a href="global.html#closeContact">closeContact</a></li><li><a href="global.html#closePopUp">closePopUp</a></li><li><a href="global.html#createContact">createContact</a></li><li><a href="global.html#createTask">createTask</a></li><li><a href="global.html#createdFromBoard">createdFromBoard</a></li><li><a href="global.html#currentDraggedElement">currentDraggedElement</a></li><li><a href="global.html#currentTaskModal">currentTaskModal</a></li><li><a href="global.html#deleteContact">deleteContact</a></li><li><a href="global.html#deleteSubTask">deleteSubTask</a></li><li><a href="global.html#deleteTask">deleteTask</a></li><li><a href="global.html#editAssignsArray">editAssignsArray</a></li><li><a href="global.html#editContact">editContact</a></li><li><a href="global.html#editSubTask">editSubTask</a></li><li><a href="global.html#editSubTaskClick">editSubTaskClick</a></li><li><a href="global.html#editSubtasksArray">editSubtasksArray</a></li><li><a href="global.html#editTask">editTask</a></li><li><a href="global.html#editTaskTemplate">editTaskTemplate</a></li><li><a href="global.html#generateEditContactHTML">generateEditContactHTML</a></li><li><a href="global.html#generateEditSubtasksHTML">generateEditSubtasksHTML</a></li><li><a href="global.html#generateHTMLshowContact">generateHTMLshowContact</a></li><li><a href="global.html#generateRegisterHTML">generateRegisterHTML</a></li><li><a href="global.html#generateTaskTemplateHTML">generateTaskTemplateHTML</a></li><li><a href="global.html#generateTodoCardModal">generateTodoCardModal</a></li><li><a href="global.html#generateTodoHTML">generateTodoHTML</a></li><li><a href="global.html#generateTodoSubtask">generateTodoSubtask</a></li><li><a href="global.html#getAssignedToTemplate">getAssignedToTemplate</a></li><li><a href="global.html#getCeckBoxAreaTemplateForCategory">getCeckBoxAreaTemplateForCategory</a></li><li><a href="global.html#getCheckBoxAreaTemplateForAssigned">getCheckBoxAreaTemplateForAssigned</a></li><li><a href="global.html#getCircleTemplate">getCircleTemplate</a></li><li><a href="global.html#getFormattedDate">getFormattedDate</a></li><li><a href="global.html#getGreetingTime">getGreetingTime</a></li><li><a href="global.html#getItem">getItem</a></li><li><a href="global.html#getPopUpTemplate">getPopUpTemplate</a></li><li><a href="global.html#getPrioLowSVG">getPrioLowSVG</a></li><li><a href="global.html#getPrioMediumSVG">getPrioMediumSVG</a></li><li><a href="global.html#getPrioSVG">getPrioSVG</a></li><li><a href="global.html#getPrioUrgentSVG">getPrioUrgentSVG</a></li><li><a href="global.html#getSelectedAssigneds">getSelectedAssigneds</a></li><li><a href="global.html#getSubtasksTemplate">getSubtasksTemplate</a></li><li><a href="global.html#getTaskData">getTaskData</a></li><li><a href="global.html#getTaskTemplate">getTaskTemplate</a></li><li><a href="global.html#getUpdatedSubtasks">getUpdatedSubtasks</a></li><li><a href="global.html#getVariablesToRender">getVariablesToRender</a></li><li><a href="global.html#guestLogIn">guestLogIn</a></li><li><a href="global.html#handleSearchChange">handleSearchChange</a></li><li><a href="global.html#highlight">highlight</a></li><li><a href="global.html#includeHTML">includeHTML</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#initBoard">initBoard</a></li><li><a href="global.html#initContacts">initContacts</a></li><li><a href="global.html#initLogIn">initLogIn</a></li><li><a href="global.html#initRegister">initRegister</a></li><li><a href="global.html#initSummary">initSummary</a></li><li><a href="global.html#initTask">initTask</a></li><li><a href="global.html#isCategoryValidated">isCategoryValidated</a></li><li><a href="global.html#isPasswordConfirmed">isPasswordConfirmed</a></li><li><a href="global.html#letters">letters</a></li><li><a href="global.html#loadAddTaskTemplate">loadAddTaskTemplate</a></li><li><a href="global.html#loadUsers">loadUsers</a></li><li><a href="global.html#logIn">logIn</a></li><li><a href="global.html#moveTo">moveTo</a></li><li><a href="global.html#navToSignIn">navToSignIn</a></li><li><a href="global.html#oldContacts">oldContacts</a></li><li><a href="global.html#openCardModal">openCardModal</a></li><li><a href="global.html#openContact">openContact</a></li><li><a href="global.html#openMobileName">openMobileName</a></li><li><a href="global.html#openOrCloseCheckBoxAreaForAssigned">openOrCloseCheckBoxAreaForAssigned</a></li><li><a href="global.html#openOrCloseCheckBoxAreaForCategory">openOrCloseCheckBoxAreaForCategory</a></li><li><a href="global.html#openPopUp">openPopUp</a></li><li><a href="global.html#progress">progress</a></li><li><a href="global.html#pushProgress">pushProgress</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#removeHighlight">removeHighlight</a></li><li><a href="global.html#renderAllData">renderAllData</a></li><li><a href="global.html#renderContactToRegister">renderContactToRegister</a></li><li><a href="global.html#renderOldContacts">renderOldContacts</a></li><li><a href="global.html#rotateIcon">rotateIcon</a></li><li><a href="global.html#saveContact">saveContact</a></li><li><a href="global.html#saveEditTask">saveEditTask</a></li><li><a href="global.html#saveEditedSubTask">saveEditedSubTask</a></li><li><a href="global.html#selectAssignedPersons">selectAssignedPersons</a></li><li><a href="global.html#selectedCategoryItem">selectedCategoryItem</a></li><li><a href="global.html#selectedContactIndex">selectedContactIndex</a></li><li><a href="global.html#selectedName">selectedName</a></li><li><a href="global.html#sendToBackend">sendToBackend</a></li><li><a href="global.html#setActiveButton">setActiveButton</a></li><li><a href="global.html#setBackgroundToActiveSideBar">setBackgroundToActiveSideBar</a></li><li><a href="global.html#setEditValuesOfTaskModal">setEditValuesOfTaskModal</a></li><li><a href="global.html#setItem">setItem</a></li><li><a href="global.html#setUserInitialsInHeaderTemplateButton">setUserInitialsInHeaderTemplateButton</a></li><li><a href="global.html#showAmounts">showAmounts</a></li><li><a href="global.html#showContact">showContact</a></li><li><a href="global.html#startDragging">startDragging</a></li><li><a href="global.html#subtaskId">subtaskId</a></li><li><a href="global.html#tasks">tasks</a></li><li><a href="global.html#toggleActiveAssignedItem">toggleActiveAssignedItem</a></li><li><a href="global.html#toggleContact">toggleContact</a></li><li><a href="global.html#toggleSubtaskCompleted">toggleSubtaskCompleted</a></li><li><a href="global.html#updateActiveInitialCircles">updateActiveInitialCircles</a></li><li><a href="global.html#updateAssignedItemsUI">updateAssignedItemsUI</a></li><li><a href="global.html#updateFilteredTasks">updateFilteredTasks</a></li><li><a href="global.html#updateTasks">updateTasks</a></li><li><a href="global.html#user">user</a></li><li><a href="global.html#users">users</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Thu Feb 29 2024 08:57:13 GMT+0100 (Central European Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
