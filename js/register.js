@@ -65,9 +65,6 @@ async function handleRegistrationError(response) {
 }
 
 
-
-
-
 /**
  * Displays a success message for successful registration and redirects to the login page.
  */

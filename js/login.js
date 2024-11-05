@@ -1,24 +1,4 @@
 /**
- * Array to store user objects.
- * @type {Array<{email: string, password: string}>}
- */
-let users = [];
-
-/**
- * The current user object.
- * @type {Array}
- */
-let user = [];
-
-/**
- * Initializes the login process by loading users.
- * @async
- */
-async function initLogIn() {
-    await loadUsers();
-}
-
-/**
  * Navigates to the sign-in page.
  */
 function navToSignIn() {
@@ -32,51 +12,73 @@ function navToSignIn() {
 async function guestLogIn() {
     user = [];
     await setItem("user", JSON.stringify(user));
-    window.location.href = "../../html/summary.html"; 
+    window.location.href = "../../html/summary.html";
     console.log("test");
 }
 
 /**
- * Loads users from storage.
- * Tries to parse the "users" item from storage. If it exists and is an array, it sets the users variable.
- * Otherwise, initializes users with an empty array.
+ * Performs the login by sending the entered email and password to the backend.
+ * If the user is found, it stores the token and navigates to the summary page.
+ * If login fails, an error message is displayed.
  * @async
  */
-async function loadUsers() {
+async function logIn() {
+    let connectionString = "http://localhost:8000/api/auth/login/";
+    let userData = {
+        "email": document.getElementById("emailInput").value,
+        "password": document.getElementById("passwordInput").value
+    };
+
     try {
-       let loadedUsers = await getItem("users");
-        
-        if (Array.isArray(loadedUsers)) {
-            users = loadedUsers;
+        let response = await sendLoginRequest(connectionString, userData);
+
+        if (response.ok) {
+            let data = await response.json();
+
+            let user = {
+                "token": data.token,
+                "user_id": data.user_id,
+                "username": data.username,
+                "email": data.email
+            };
+
+            localStorage.setItem("user", JSON.stringify(user));
+            window.location.href = "../../html/summary.html";
         } else {
-            users = [];
+            let failureText = document.getElementById("failureTextInLogin");
+            failureText.innerHTML = "Email or password are incorrect";
         }
     } catch (error) {
-        console.error("Fehler beim Laden der Benutzer: ", error);
-        users = [];
+        let failureText = document.getElementById("failureTextInLogin");
+        failureText.innerHTML = "An error has occurred. Please try again.";
     }
 }
 
 /**
- * Performs the login by validating the entered email and password against the loaded users.
- * If the user is found, it saves the user to storage and navigates to the summary page.
- * Otherwise, it displays an error message.
+ * Sends a POST request to the specified login endpoint with the user login credentials.
+ * @param {string} connectionString - The URL of the login endpoint.
+ * @param {Object} userData - Object containing the login credentials (email and password).
+ * @param {string} userData.email - The user's email address.
+ * @param {string} userData.password - The user's password.
+ * @returns {Promise<Response>} - The response from the fetch request.
  * @async
  */
-async function logIn() {
-    let email = document.getElementById("emailInput").value;
-    let password = document.getElementById("passwordInput").value;
-
-    user = users.find((user) => user.email === email && user.password === password);
-
-    if (user) {
-        await setItem("user", JSON.stringify(user));
-        window.location.href = "../../html/summary.html";
-    } else {
-        let failureText = document.getElementById("failureTextInLogin");
-        failureText.innerHTML = "Email or password are incorrect";
-    }
+async function sendLoginRequest(connectionString, userData) {
+    let response = await fetch(connectionString, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            email: userData.email,
+            password: userData.password
+        })
+    });
+    return response;
 }
+
+
+
 
 /**
  * Sets up event listeners on DOMContentLoaded event to clear failure messages upon input field interaction.
@@ -96,15 +98,15 @@ document.addEventListener("DOMContentLoaded", function () {
     toggleIcon.addEventListener("click", function () {
         if (passwordInput.type === "password") {
             passwordInput.type = "text";
-            toggleIcon.src = "../../img/visibility.png"; 
+            toggleIcon.src = "../../img/visibility.png";
         } else {
             passwordInput.type = "password";
-            toggleIcon.src = "../../img/visibility-off.png"; 
+            toggleIcon.src = "../../img/visibility-off.png";
         }
     });
     passwordInput.addEventListener("input", function () {
         if (passwordInput.value === "") {
-            toggleIcon.src = "../../img/lock.svg"; 
+            toggleIcon.src = "../../img/lock.svg";
             passwordInput.type = "password";
         }
     });
