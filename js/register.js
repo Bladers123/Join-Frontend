@@ -53,11 +53,17 @@ async function sendRegistrationRequest(url, userData) {
 async function handleRegistrationError(response) {
     const errorData = await response.json();
     let failureText = document.getElementById("failureText");
-    if (errorData.email)
+
+    // Prüfen, ob ein Fehler für den Benutzernamen (username) vorliegt und diesen anzeigen
+    if (errorData.username) {
+        failureText.innerHTML = errorData.username[0];
+    } else if (errorData.email) {
         failureText.innerHTML = errorData.email[0];
-    else
+    } else {
         failureText.innerHTML = errorData.detail || "Registration failed";
+    }
 }
+
 
 
 
