@@ -1,46 +1,87 @@
 /**
- * Array to store user data.
- * @type {Array<{name: string, email: string, password: string}>}
- */
-let users = [];
-
-/**
- * Initializes the registration process by loading users from storage.
- * @async
- */
-async function initRegister() {
-    await loadUsers();
-}
-
-/**
- * Registers a new user if the password is confirmed. Checks if the user already exists based on email and name.
- * If the user does not exist, adds the new user to the users array and updates the storage.
- * If the user exists, displays an error message. Redirects to the login page upon successful registration.
+ * Registers a new user if the password is confirmed. Sends the registration request to the backend.
+ * Handles server or network errors by displaying appropriate messages.
+ * Redirects to the login page upon successful registration.
  * @async
  */
 async function register() {
-    if (isPasswordConfirmed()) {
-        let message = 'You Signed Up successfully';
-        let newUser = {
-            name: inputName.value,
-            email: inputEmail.value,
-            password: inputPassword.value,
-        };
-        let userExists = users.find((user) => user.email === newUser.email && user.name === newUser.name);
-        if (userExists) {
-            let failureText = document.getElementById("failureText");
-            failureText.innerHTML = "User already exists";
-        } else {
-            users.push(newUser);
-            await setItem("users", JSON.stringify(users));
-            document.getElementById("popup-container").innerHTML = getPopUpTemplate(message);
-            setTimeout(function () {
-                window.location.href = "../../html/user-login/log-in.html";
-            }, 1000);
+    if (!isPasswordConfirmed()) return;
+
+    const newUser = {
+        username: inputName.value,
+        email: inputEmail.value,
+        password: inputPassword.value,
+    };
+
+    const connectionString = "http://127.0.0.1:8000/api/auth/register/";
+
+    try {
+        const response = await sendRegistrationRequest(connectionString, newUser);
+        if (!response.ok) {
+            await handleRegistrationError(response);
+            return;
         }
-        await loadUsers();
+        handleRegistrationSuccess();
+    } catch (error) {
+        handleNetworkError(error);
     }
 }
+
+/**
+ * Sends the registration request to the backend with the provided user data.
+ * @async
+ * @param {string} url - The endpoint URL for the registration request.
+ * @param {Object} userData - The new user data, containing username, email, and password.
+ * @returns {Promise<Response>} - The response from the server.
+ */
+async function sendRegistrationRequest(url, userData) {
+    return await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+    });
+}
+
+/**
+ * Handles registration errors returned from the server response.
+ * Displays an error message to the user based on the response details.
+ * @async
+ * @param {Response} response - The server response with error details.
+ */
+async function handleRegistrationError(response) {
+    const errorData = await response.json();
+    console.log("Fehlerdetails:", errorData); // Zeigt spezifische Fehler aus dem Backend
+    document.getElementById("failureText").innerHTML = errorData.detail || "Registration failed";
+}
+
+
+
+/**
+ * Displays a success message for successful registration and redirects to the login page.
+ */
+function handleRegistrationSuccess() {
+    console.log("User registered successfully");
+    const message = 'You Signed Up successfully';
+    document.getElementById("popup-container").innerHTML = getPopUpTemplate(message);
+    setTimeout(() => {
+        window.location.href = "../../html/user-login/log-in.html";
+    }, 1000);
+}
+
+/**
+ * Handles network errors that occur during the registration process.
+ * Logs the error and displays an error message to the user.
+ * @param {Error} error - The network error encountered during the request.
+ */
+function handleNetworkError(error) {
+    console.log("Netzwerkfehler:", error);
+    document.getElementById("failureText").innerHTML = "An error occurred. Please try again.";
+}
+
+
+
 
 /**
  * Navigates the user back to the login page.
@@ -49,23 +90,6 @@ function backToLogIn() {
     window.location.href = "log-in.html";
 }
 
-/**
- * FOR TESTING: Loads the list of users from storage. Initializes the users array if no users are found or an error occurs.
- * @async
- */
-async function loadUsers() {
-    try {
-        let loadedUsers = JSON.parse(await getItem("users"));
-        if (Array.isArray(loadedUsers)) {
-            users = loadedUsers;
-        } else {
-            users = [];
-        }
-    } catch (error) {
-        console.error("Fehler beim Laden der Benutzer: ", error);
-        users = [];
-    }
-}
 
 /**
  * Checks if the password entered matches the confirmation password.
