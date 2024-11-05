@@ -52,9 +52,13 @@ async function sendRegistrationRequest(url, userData) {
  */
 async function handleRegistrationError(response) {
     const errorData = await response.json();
-    console.log("Fehlerdetails:", errorData); // Zeigt spezifische Fehler aus dem Backend
-    document.getElementById("failureText").innerHTML = errorData.detail || "Registration failed";
+    let failureText = document.getElementById("failureText");
+    if (errorData.email)
+        failureText.innerHTML = errorData.email[0];
+    else
+        failureText.innerHTML = errorData.detail || "Registration failed";
 }
+
 
 
 
