@@ -5,7 +5,7 @@
  */
 async function init(sideBarId) {
     await includeHTML();
-    await setUserInitialsInHeaderTemplateButton();
+    // await setUserInitialsInHeaderTemplateButton();
     await setBackgroundToActiveSideBar(sideBarId);
 }
 
@@ -65,4 +65,9 @@ async function setBackgroundToActiveSideBar(sideBarId) {
                 break;
         }
     }
+}
+
+function getUserFromLocalStorage() {
+    let loggedUser = localStorage.getItem("user");
+    return loggedUser ? JSON.parse(loggedUser) : null;
 }
