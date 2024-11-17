@@ -5,7 +5,7 @@
  */
 async function init(sideBarId) {
     await includeHTML();
-    // await setUserInitialsInHeaderTemplateButton();
+    await setUserInitialsInHeaderTemplateButton();
     await setBackgroundToActiveSideBar(sideBarId);
 }
 
@@ -34,9 +34,9 @@ async function includeHTML() {
  */
 async function setUserInitialsInHeaderTemplateButton() {
     let button = document.getElementById("user-button-initials");
-    let user = JSON.parse(await getItem("user"));
-    if (button && user.name) {
-        button.innerHTML = user.name
+    let user = getUserFromLocalStorage();
+    if (button && user.username) {
+        button.innerHTML = user.username
             .split(" ")
             .map((part) => part[0].toUpperCase())
             .join("");
