@@ -88,7 +88,6 @@ async function getContactsRequest() {
         }
 
         let data = await response.json();
-        console.log("successful loading of contacts: ", data);
         return data;
     } catch (error) {
         console.error("Network- or Servererror:", error);
