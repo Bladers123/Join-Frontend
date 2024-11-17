@@ -202,7 +202,7 @@ async function createContact() {
 }
 
 async function insertContactToDB(newContact) {
-    let conntectionString = "http://localhost:8000/api/profile/contacts";
+    let conntectionString = "http://localhost:8000/api/profile/contacts/";
     let token = this.loggedUser.token;
 
     try {
@@ -229,7 +229,7 @@ async function insertContactToDB(newContact) {
 }
 
 async function deleteContactFromDB(contact) {
-    let conntectionString = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+    let conntectionString = `http://localhost:8000/api/profile/contacts/${contact.id}/`;
     let token = this.loggedUser.token;
 
     try {
@@ -244,7 +244,7 @@ async function deleteContactFromDB(contact) {
 
         if (!response.ok) {
             let errorText = await response.text();
-            console.error("Error insert contact: ", response.status, errorText);
+            console.error("Error delete contact: ", response.status, errorText);
             throw new Error(`HTTP-Error ${response.status}: ${errorText}`);
         }
     }
@@ -254,89 +254,125 @@ async function deleteContactFromDB(contact) {
     }
 }
 
+async function updateContactFromDb(contact) {
+    let connectionString = `http://localhost:8000/api/profile/contacts/${contact.id}/`;
+    let token = this.loggedUser.token;
 
-    /**
-     * Saves changes to an existing contact.
-     * @param {number} i - The index of the contact in the oldContacts array to save.
-     */
-    async function saveContact(i) {
-        document.getElementById("edit-pop-up").classList.add("d-none");
-        document.getElementById("edit-pop-up").classList.remove("d-flex");
+    try {
+        let response = await fetch(connectionString, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Token ${token}`
+            },
+            body: JSON.stringify(contact)
+        });
 
-        let newName = document.getElementById("old-name").value;
-        let newMail = document.getElementById("old-email").value;
-        let newTel = document.getElementById("old-tel").value;
+        if (!response.ok) {
+            let errorText = await response.text();
+            console.error("Error update contact: ", response.status, errorText);
+            return false;
+        }
 
-        contacts[i]["name"] = newName;
-        contacts[i]["email"] = newMail;
-        contacts[i]["tel"] = newTel;
+        console.log("Contact updated successfully:", await response.json());
+        return true;
+    } catch (error) {
+        console.error("Network- or Servererror:", error);
+        return false;
+    }
+}
 
-        showContact(i);
-        renderContacts();
-        await setItem("oldContacts", JSON.stringify(contacts));
+
+
+/**
+ * Saves changes to an existing contact.
+ * @param {number} i - The index of the contact in the oldContacts array to save.
+ */
+async function saveContact(i) {
+    let newName = document.getElementById("old-name").value;
+    let newMail = document.getElementById("old-email").value;
+    let newTel = document.getElementById("old-tel").value;
+
+    let updatedContact = {
+        ...contacts[i], // Übernehme bestehende Eigenschaften
+        name: newName,
+        email: newMail,
+        number: newTel
+    };
+
+    let success = await updateContactFromDb(updatedContact); // API-Aufruf
+    if (success) {
+        contacts[i] = updatedContact; // Lokal aktualisieren
+        renderContacts(); // Neu rendern
+        showContact(i); // Aktualisierte Details anzeigen
     }
 
-    /**
-     * Opens a modal to edit a contact's details.
-     * @param {string} name - The contact's name.
-     * @param {string} mail - The contact's email.
-     * @param {string} number - The contact's telephone number.
-     * @param {string} backgroundColor - The background color for the contact's display.
-     * @param {string} initials - The initials of the contact.
-     * @param {number} i - The index of the contact in the oldContacts array.
-     */
-    function editContact(name, mail, number, backgroundColor, initials, i) {
-        document.getElementById("edit-pop-up").classList.remove("d-none");
-        document.getElementById("edit-pop-up").classList.add("d-flex");
+    document.getElementById("edit-pop-up").classList.add("d-none");
+    document.getElementById("edit-pop-up").classList.remove("d-flex");
+}
 
-        let edit = document.getElementById("edit-pop-up");
-        edit.innerHTML = "";
-        edit.innerHTML += generateEditContactHTML(backgroundColor, initials, name, mail, number, i);
-    }
+/**
+ * Opens a modal to edit a contact's details.
+ * @param {string} name - The contact's name.
+ * @param {string} mail - The contact's email.
+ * @param {string} number - The contact's telephone number.
+ * @param {string} backgroundColor - The background color for the contact's display.
+ * @param {string} initials - The initials of the contact.
+ * @param {number} i - The index of the contact in the oldContacts array.
+ */
+function editContact(name, mail, number, backgroundColor, initials, i) {
+    document.getElementById("edit-pop-up").classList.remove("d-none");
+    document.getElementById("edit-pop-up").classList.add("d-flex");
 
-    /**
-     * Deletes a contact from the contact list.
-     * @param {number} i - The index of the contact in the oldContacts array to delete.
-     */
-    async function deleteContact(i) {
-        contacts.splice(i, 1);
-        letters.splice(i, 1);
-        document.getElementById("open-contact").classList.add("d-none");
-        renderContacts();
-        await setItem("oldContacts", JSON.stringify(contacts));
-    }
+    let edit = document.getElementById("edit-pop-up");
+    edit.innerHTML = "";
+    edit.innerHTML += generateEditContactHTML(backgroundColor, initials, name, mail, number, i);
+}
 
-    /**
-     * Opens a popup modal for creating a new contact.
-     */
-    function openPopUp() {
-        document.getElementById("pop-up").classList.remove("d-none");
-        document.getElementById("pop-up").classList.add("d-flex");
-    }
+/**
+ * Deletes a contact from the contact list.
+ * @param {number} i - The index of the contact in the oldContacts array to delete.
+ */
+async function deleteContact(i) {
+    let contactToDelete = contacts[i]; // Hole Kontakt vor dem Entfernen
+    await deleteContactFromDB(contactToDelete); // Kontakt aus DB löschen
+    contacts.splice(i, 1); // Lokal entfernen, wenn erfolgreich
+    letters.splice(i, 1);
+    document.getElementById("open-contact").classList.add("d-none");
+    renderContacts(); // Kontakte neu rendern
+}
 
-    /**
-     * Closes the popup modal for adding or editing a contact.
-     */
-    function closePopUp() {
-        document.getElementById("pop-up").classList.add("d-none");
-        document.getElementById("pop-up").classList.remove("d-flex");
-        document.getElementById("edit-pop-up").classList.add("d-none");
-        document.getElementById("edit-pop-up").classList.remove("d-flex");
-        document.getElementById("contact-name").value = "";
-        document.getElementById("contact-email").value = "";
-        document.getElementById("contact-tel").value = "";
-    }
+/**
+ * Opens a popup modal for creating a new contact.
+ */
+function openPopUp() {
+    document.getElementById("pop-up").classList.remove("d-none");
+    document.getElementById("pop-up").classList.add("d-flex");
+}
 
-    /**
-     * Opens mobile view for contact name input.
-     */
-    function openMobileName() {
-        document.getElementById("resize-contact").classList.remove("d-none-1300");
-    }
+/**
+ * Closes the popup modal for adding or editing a contact.
+ */
+function closePopUp() {
+    document.getElementById("pop-up").classList.add("d-none");
+    document.getElementById("pop-up").classList.remove("d-flex");
+    document.getElementById("edit-pop-up").classList.add("d-none");
+    document.getElementById("edit-pop-up").classList.remove("d-flex");
+    document.getElementById("contact-name").value = "";
+    document.getElementById("contact-email").value = "";
+    document.getElementById("contact-tel").value = "";
+}
 
-    /**
-     * Closes the contact view in mobile.
-     */
-    function closeContact() {
-        document.getElementById("resize-contact").classList.add("d-none-1300");
-    }
+/**
+ * Opens mobile view for contact name input.
+ */
+function openMobileName() {
+    document.getElementById("resize-contact").classList.remove("d-none-1300");
+}
+
+/**
+ * Closes the contact view in mobile.
+ */
+function closeContact() {
+    document.getElementById("resize-contact").classList.add("d-none-1300");
+}
