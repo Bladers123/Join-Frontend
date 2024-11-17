@@ -71,3 +71,8 @@ function getUserFromLocalStorage() {
     let loggedUser = localStorage.getItem("user");
     return loggedUser ? JSON.parse(loggedUser) : null;
 }
+
+function logout() {    
+    localStorage.removeItem("user");
+    window.location.href = "user-login/log-in.html";
+}

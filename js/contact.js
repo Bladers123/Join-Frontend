@@ -38,10 +38,8 @@ let loggedUser;
  */
 async function initContacts() {
     this.loggedUser = getUserFromLocalStorage();
-    if (this.loggedUser) {
-        console.log(this.loggedUser);
+    if (this.loggedUser)
         await renderContacts();
-    }
     else
         window.location.href = "../../html/user-login/log-in.html";
 }
@@ -274,7 +272,6 @@ async function updateContactFromDb(contact) {
             return false;
         }
 
-        console.log("Contact updated successfully:", await response.json());
         return true;
     } catch (error) {
         console.error("Network- or Servererror:", error);
