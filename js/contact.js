@@ -37,7 +37,7 @@ let loggedUser;
  * @async
  */
 async function initContacts() {
-    this.loggedUser = getUserFromLocalStorage();
+    this.loggedUser = await getUserFromLocalStorage();
     if (this.loggedUser)
         await renderContacts();
     else
@@ -58,42 +58,13 @@ document.addEventListener("DOMContentLoaded", function () {
  * Renders the old contacts in the contact list.
  */
 async function renderContacts() {
-    contacts = await getContactsRequest();
+    contacts = await getContactsFromDB();
     let renderContact = document.getElementById("contactName");
     let currentLetter = null;
     renderContact.innerHTML = "";
     contacts.sort((a, b) => a.name.localeCompare(b.name));
     getVariablesToRender(renderContact, currentLetter);
 }
-
-
-async function getContactsRequest() {
-    let token = this.loggedUser.token;
-    let connectionString = "http://localhost:8000/api/profile/contacts";
-
-    try {
-        let response = await fetch(connectionString, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Token " + token
-            }
-        });
-
-        if (!response.ok) {
-            // Fehlerstatus prüfen
-            let errorText = await response.text();
-            console.error("Error loading contacts: ", response.status, errorText);
-            throw new Error(`HTTP-Error ${response.status}: ${errorText}`);
-        }
-
-        let data = await response.json();
-        return data;
-    } catch (error) {
-        console.error("Network- or Servererror:", error);
-    }
-}
-
 
 
 /**
@@ -197,88 +168,6 @@ async function createContact() {
     renderContacts();
     closePopUp();
 }
-
-async function insertContactToDB(newContact) {
-    let conntectionString = "http://localhost:8000/api/profile/contacts/";
-    let token = this.loggedUser.token;
-
-    try {
-        let response = await fetch(conntectionString, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Token " + token
-            },
-            body: JSON.stringify(newContact)
-        });
-
-        if (!response.ok) {
-            let errorText = await response.text();
-            console.error("Error insert contact: ", response.status, errorText);
-            throw new Error(`HTTP-Error ${response.status}: ${errorText}`);
-        }
-    }
-
-    catch (error) {
-        console.error("Network- or Servererror:", error);
-    }
-
-}
-
-async function deleteContactFromDB(contact) {
-    let conntectionString = `http://localhost:8000/api/profile/contacts/${contact.id}/`;
-    let token = this.loggedUser.token;
-
-    try {
-        let response = await fetch(conntectionString, {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Token " + token
-            },
-            body: JSON.stringify(contact)
-        });
-
-        if (!response.ok) {
-            let errorText = await response.text();
-            console.error("Error delete contact: ", response.status, errorText);
-            throw new Error(`HTTP-Error ${response.status}: ${errorText}`);
-        }
-    }
-
-    catch (error) {
-        console.error("Network- or Servererror:", error);
-    }
-}
-
-async function updateContactFromDb(contact) {
-    let connectionString = `http://localhost:8000/api/profile/contacts/${contact.id}/`;
-    let token = this.loggedUser.token;
-
-    try {
-        let response = await fetch(connectionString, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Token ${token}`
-            },
-            body: JSON.stringify(contact)
-        });
-
-        if (!response.ok) {
-            let errorText = await response.text();
-            console.error("Error update contact: ", response.status, errorText);
-            return false;
-        }
-
-        return true;
-    } catch (error) {
-        console.error("Network- or Servererror:", error);
-        return false;
-    }
-}
-
-
 
 /**
  * Saves changes to an existing contact.

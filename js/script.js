@@ -67,7 +67,7 @@ async function setBackgroundToActiveSideBar(sideBarId) {
     }
 }
 
-function getUserFromLocalStorage() {
+async function getUserFromLocalStorage() {
     let loggedUser = localStorage.getItem("user");
     return loggedUser ? JSON.parse(loggedUser) : null;
 }

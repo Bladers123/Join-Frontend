@@ -28,6 +28,9 @@ let progress;
  */
 let createdFromBoard = false;
 
+
+let loggedUser;
+
 /**
  * Initializes the task with default or specified progress,
  * and sets up the UI elements based on the task's progress.
@@ -35,17 +38,22 @@ let createdFromBoard = false;
  * @param {string} [progress="toDo"] - The initial progress of the task.
  */
 async function initTask(progress = "toDo") {
-    this.progress = progress;
-    createdFromBoard = false;
-    if (progress !== "noProgress") {
-        rotateIcon("nav-image-assigned");
-        rotateIcon("nav-image-category");
+    this.loggedUser = await getUserFromLocalStorage();
+    if (this.loggedUser) {
+        this.progress = progress;
+        createdFromBoard = false;
+        if (progress !== "noProgress") {
+            rotateIcon("nav-image-assigned");
+            rotateIcon("nav-image-category");
+        }
+        let urgentButton = document.getElementById("medium-button-id");
+        if (urgentButton) {
+            urgentButton.classList.add("active");
+        }
+        this.assigneds = await getContactsFromDB();
     }
-    let urgentButton = document.getElementById("medium-button-id");
-    if (urgentButton) {
-        urgentButton.classList.add("active");
-    }
-    assigneds = JSON.parse((await getItem("oldContacts")) || "[]");
+    else
+        window.location.href = "../../html/user-login/log-in.html";
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -118,7 +126,7 @@ function getCheckBoxAreaTemplateForAssigned() {
             let lastName = parts.length > 1 ? parts[1] : "";
             return /*html*/ `
             <div class="item assigned-item ${assigned.selected ? "active" : ""}" onclick="toggleActiveAssignedItem(this)">
-                <div class="initialCircle margin-top" style="background-color: ${assigned.bg};">${firstName.charAt(0)}${lastName.charAt(0)}</div>
+                <div class="initialCircle margin-top" style="background-color: ${assigned.backgroundColor};">${firstName.charAt(0)}${lastName.charAt(0)}</div>
                 <label>${firstName} ${lastName}</label>
                 <input class="checkbox" type="checkbox" ${assigned.selected ? "checked" : ""}>
             </div>
@@ -262,13 +270,14 @@ document.addEventListener("DOMContentLoaded", function () {
  * @async
  */
 async function createTask() {
-    let currentTask = getTaskData();
-    let validate = isCategoryValidated(currentTask.category);
+    let newTask = getTaskData();    
+    let validate = isCategoryValidated(newTask.category);
     let message = 'Task added to board';
     if (validate) {
         let tasks = JSON.parse((await getItem("tasks")) || "[]");
-        tasks = tasks.concat(currentTask);
-        await setItem("tasks", JSON.stringify(tasks));
+        tasks = tasks.concat(newTask);
+        //await setItem("tasks", JSON.stringify(tasks));
+        await insertTaskToDB(newTask)
         document.getElementById("popup-container").innerHTML = getPopUpTemplate(message);
         if (!createdFromBoard) {
             setTimeout(function () {
@@ -295,7 +304,7 @@ function getTaskData() {
         .filter((assigned) => assigned.selected)
         .map((assigned) => ({
             name: assigned.name,
-            bg: assigned.bg,
+            backgroundColor: assigned.backgroundColor,
         }));
     let progress = this.progress;
     let id = new Date().getTime();
