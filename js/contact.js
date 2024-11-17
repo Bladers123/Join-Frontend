@@ -1,6 +1,6 @@
 /**
  * Array to store old contact information.
- * @type {Array<{name: string, email: string, tel: string, bg: string, selected: boolean}>}
+ * @type {Array<{name: string, email: string, tel: string, backgroundColor: string, selected: boolean}>}
  */
 let contacts = [];
 
@@ -71,17 +71,32 @@ async function renderContacts() {
 
 async function getContactsRequest() {
     let token = this.loggedUser.token;
-    let connectionString = "http://localhost:8000/api/auth/Profile/";
+    let connectionString = "http://localhost:8000/api/profile/contacts";
 
-    let response = await fetch(connectionString, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + token
+    try {
+        let response = await fetch(connectionString, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Token " + token
+            }
+        });
+
+        if (!response.ok) {
+            // Fehlerstatus prüfen
+            let errorText = await response.text();
+            console.error("Error loading contacts: ", response.status, errorText);
+            throw new Error(`HTTP-Error ${response.status}: ${errorText}`);
         }
-    });
-    return response;
+
+        let data = await response.json();
+        console.log("successful loading of contacts: ", data);
+        return data;
+    } catch (error) {
+        console.error("Network- or Servererror:", error);
+    }
 }
+
 
 
 /**
@@ -94,7 +109,7 @@ function getVariablesToRender(renderContact, currentLetter) {
         const oldContact = contacts[i];
         let name = oldContact["name"];
         let mail = oldContact["email"];
-        let bg = oldContact["bg"];
+        let backgroundColor = oldContact["backgroundColor"];
         name = name.charAt(0).toUpperCase() + name.slice(1);
         let initials = name
             .split(" ")
@@ -106,7 +121,7 @@ function getVariablesToRender(renderContact, currentLetter) {
             currentLetter = sortedByLetter;
             renderContact.innerHTML += generateRegisterHTML(sortedByLetter);
         }
-        renderContact.innerHTML += renderContactToRegister(i, bg, initials, name, mail);
+        renderContact.innerHTML += renderContactToRegister(i, backgroundColor, initials, name, mail);
     }
 }
 
@@ -123,8 +138,8 @@ function showContact(i) {
     selectedName = contacts[i];
     let name = selectedName["name"];
     let mail = selectedName["email"];
-    let number = selectedName["tel"];
-    let bg = selectedName["bg"];
+    let number = selectedName["number"];
+    let backgroundColor = selectedName["backgroundColor"];
     let initials = name
         .split(" ")
         .map((n) => n[0])
@@ -134,7 +149,7 @@ function showContact(i) {
     let contact = document.getElementById("open-contact");
     contact.classList.remove("d-none");
     contact.innerHTML = "";
-    contact.innerHTML += generateHTMLshowContact(name, mail, number, bg, initials, i);
+    contact.innerHTML += generateHTMLshowContact(name, mail, number, backgroundColor, initials, i);
 }
 
 /**
@@ -167,7 +182,7 @@ function toggleContact(i) {
  * @async
  */
 async function createContact() {
-    let selected = false;
+    let isSelected = false;
     let x = Math.floor(Math.random() * 255);
     let y = Math.floor(Math.random() * 255);
     let z = Math.floor(Math.random() * 255);
@@ -175,99 +190,153 @@ async function createContact() {
     let newContact = {
         name: document.getElementById("contact-name").value,
         email: document.getElementById("contact-email").value,
-        tel: document.getElementById("contact-tel").value,
-        bg: `rgb(${x},${y},${z})`,
-        selected,
+        number: document.getElementById("contact-tel").value,
+        backgroundColor: `rgb(${x},${y},${z})`,
+        isSelected,
     };
 
     contacts = contacts.concat(newContact);
-    await setItem("oldContacts", JSON.stringify(contacts));
+    await insertContactToDB(newContact);
     renderContacts();
     closePopUp();
 }
 
-/**
- * Saves changes to an existing contact.
- * @param {number} i - The index of the contact in the oldContacts array to save.
- */
-async function saveContact(i) {
-    document.getElementById("edit-pop-up").classList.add("d-none");
-    document.getElementById("edit-pop-up").classList.remove("d-flex");
+async function insertContactToDB(newContact) {
+    let conntectionString = "http://localhost:8000/api/profile/contacts";
+    let token = this.loggedUser.token;
 
-    let newName = document.getElementById("old-name").value;
-    let newMail = document.getElementById("old-email").value;
-    let newTel = document.getElementById("old-tel").value;
+    try {
+        let response = await fetch(conntectionString, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Token " + token
+            },
+            body: JSON.stringify(newContact)
+        });
 
-    contacts[i]["name"] = newName;
-    contacts[i]["email"] = newMail;
-    contacts[i]["tel"] = newTel;
+        if (!response.ok) {
+            let errorText = await response.text();
+            console.error("Error insert contact: ", response.status, errorText);
+            throw new Error(`HTTP-Error ${response.status}: ${errorText}`);
+        }
+    }
 
-    showContact(i);
-    renderContacts();
-    await setItem("oldContacts", JSON.stringify(contacts));
+    catch (error) {
+        console.error("Network- or Servererror:", error);
+    }
+
 }
 
-/**
- * Opens a modal to edit a contact's details.
- * @param {string} name - The contact's name.
- * @param {string} mail - The contact's email.
- * @param {string} number - The contact's telephone number.
- * @param {string} bg - The background color for the contact's display.
- * @param {string} initials - The initials of the contact.
- * @param {number} i - The index of the contact in the oldContacts array.
- */
-function editContact(name, mail, number, bg, initials, i) {
-    document.getElementById("edit-pop-up").classList.remove("d-none");
-    document.getElementById("edit-pop-up").classList.add("d-flex");
+async function deleteContactFromDB(contact) {
+    let conntectionString = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+    let token = this.loggedUser.token;
 
-    let edit = document.getElementById("edit-pop-up");
-    edit.innerHTML = "";
-    edit.innerHTML += generateEditContactHTML(bg, initials, name, mail, number, i);
+    try {
+        let response = await fetch(conntectionString, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Token " + token
+            },
+            body: JSON.stringify(contact)
+        });
+
+        if (!response.ok) {
+            let errorText = await response.text();
+            console.error("Error insert contact: ", response.status, errorText);
+            throw new Error(`HTTP-Error ${response.status}: ${errorText}`);
+        }
+    }
+
+    catch (error) {
+        console.error("Network- or Servererror:", error);
+    }
 }
 
-/**
- * Deletes a contact from the contact list.
- * @param {number} i - The index of the contact in the oldContacts array to delete.
- */
-async function deleteContact(i) {
-    contacts.splice(i, 1);
-    letters.splice(i, 1);
-    document.getElementById("open-contact").classList.add("d-none");
-    renderContacts();
-    await setItem("oldContacts", JSON.stringify(contacts));
-}
 
-/**
- * Opens a popup modal for creating a new contact.
- */
-function openPopUp() {
-    document.getElementById("pop-up").classList.remove("d-none");
-    document.getElementById("pop-up").classList.add("d-flex");
-}
+    /**
+     * Saves changes to an existing contact.
+     * @param {number} i - The index of the contact in the oldContacts array to save.
+     */
+    async function saveContact(i) {
+        document.getElementById("edit-pop-up").classList.add("d-none");
+        document.getElementById("edit-pop-up").classList.remove("d-flex");
 
-/**
- * Closes the popup modal for adding or editing a contact.
- */
-function closePopUp() {
-    document.getElementById("pop-up").classList.add("d-none");
-    document.getElementById("pop-up").classList.remove("d-flex");
-    document.getElementById("edit-pop-up").classList.add("d-none");
-    document.getElementById("edit-pop-up").classList.remove("d-flex");
-    document.getElementById("contact-name").value = "";
-    document.getElementById("contact-email").value = "";
-    document.getElementById("contact-tel").value = "";
-}
+        let newName = document.getElementById("old-name").value;
+        let newMail = document.getElementById("old-email").value;
+        let newTel = document.getElementById("old-tel").value;
 
-/**
- * Opens mobile view for contact name input.
- */
-function openMobileName() {
-    document.getElementById("resize-contact").classList.remove("d-none-1300");
-}
+        contacts[i]["name"] = newName;
+        contacts[i]["email"] = newMail;
+        contacts[i]["tel"] = newTel;
 
-/**
- * Closes the contact view in mobile.
- */
-function closeContact() {
-    document.getElementById("resize-contact").classList.add("d-none-1300");
-}
+        showContact(i);
+        renderContacts();
+        await setItem("oldContacts", JSON.stringify(contacts));
+    }
+
+    /**
+     * Opens a modal to edit a contact's details.
+     * @param {string} name - The contact's name.
+     * @param {string} mail - The contact's email.
+     * @param {string} number - The contact's telephone number.
+     * @param {string} backgroundColor - The background color for the contact's display.
+     * @param {string} initials - The initials of the contact.
+     * @param {number} i - The index of the contact in the oldContacts array.
+     */
+    function editContact(name, mail, number, backgroundColor, initials, i) {
+        document.getElementById("edit-pop-up").classList.remove("d-none");
+        document.getElementById("edit-pop-up").classList.add("d-flex");
+
+        let edit = document.getElementById("edit-pop-up");
+        edit.innerHTML = "";
+        edit.innerHTML += generateEditContactHTML(backgroundColor, initials, name, mail, number, i);
+    }
+
+    /**
+     * Deletes a contact from the contact list.
+     * @param {number} i - The index of the contact in the oldContacts array to delete.
+     */
+    async function deleteContact(i) {
+        contacts.splice(i, 1);
+        letters.splice(i, 1);
+        document.getElementById("open-contact").classList.add("d-none");
+        renderContacts();
+        await setItem("oldContacts", JSON.stringify(contacts));
+    }
+
+    /**
+     * Opens a popup modal for creating a new contact.
+     */
+    function openPopUp() {
+        document.getElementById("pop-up").classList.remove("d-none");
+        document.getElementById("pop-up").classList.add("d-flex");
+    }
+
+    /**
+     * Closes the popup modal for adding or editing a contact.
+     */
+    function closePopUp() {
+        document.getElementById("pop-up").classList.add("d-none");
+        document.getElementById("pop-up").classList.remove("d-flex");
+        document.getElementById("edit-pop-up").classList.add("d-none");
+        document.getElementById("edit-pop-up").classList.remove("d-flex");
+        document.getElementById("contact-name").value = "";
+        document.getElementById("contact-email").value = "";
+        document.getElementById("contact-tel").value = "";
+    }
+
+    /**
+     * Opens mobile view for contact name input.
+     */
+    function openMobileName() {
+        document.getElementById("resize-contact").classList.remove("d-none-1300");
+    }
+
+    /**
+     * Closes the contact view in mobile.
+     */
+    function closeContact() {
+        document.getElementById("resize-contact").classList.add("d-none-1300");
+    }
