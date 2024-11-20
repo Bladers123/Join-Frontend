@@ -273,10 +273,11 @@ async function createTask() {
     let validate = isCategoryValidated(newTask.category);
     let message = 'Task added to board';
     if (validate) {
-        let tasks = JSON.parse((await getItem("tasks")) || "[]");
+        let tasks = await getTaskFromDB();
         tasks = tasks.concat(newTask);
-        //await setItem("tasks", JSON.stringify(tasks));
         await insertTaskToDB(newTask)
+        console.log(newTask);
+        return;
         document.getElementById("popup-container").innerHTML = getPopUpTemplate(message);
         if (!createdFromBoard) {
             setTimeout(function () {
@@ -299,9 +300,7 @@ function getTaskData() {
     let dueDate = document.getElementById("input-due-date").value;
     let priority = document.querySelector(".prioButtons button.active").innerText.trim();
     let category = document.getElementById("category-text").textContent;
-    let selectedAssigneds = assigneds
-        .filter((assigned) => assigned.selected)
-        .map((assigned) => ({
+    let selectedAssigneds = assigneds.filter((assigned) => assigned.selected).map((assigned) => ({
             name: assigned.name,
             backgroundColor: assigned.backgroundColor,
         }));

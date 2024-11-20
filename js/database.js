@@ -12,7 +12,6 @@ async function getContactsFromDB() {
         });
 
         if (!response.ok) {
-            // Fehlerstatus prüfen
             let errorText = await response.text();
             console.error("Error loading contacts: ", response.status, errorText);
             throw new Error(`HTTP-Error ${response.status}: ${errorText}`);
@@ -106,7 +105,7 @@ async function updateContactFromDb(contact) {
 }
 
 async function insertTaskToDB(task) {
-    let connectionString = "http://localhost:8000/api/profile/contacts/";
+    let connectionString = "http://localhost:8000/api/profile/tickets/";
     let token = this.loggedUser.token;
 
     try {
@@ -127,6 +126,32 @@ async function insertTaskToDB(task) {
     }
 
     catch (error) {
+        console.error("Network- or Servererror:", error);
+    }
+}
+
+async function getTaskFromDB() {
+    let token = this.loggedUser.token;
+    let connectionString = "http://localhost:8000/api/profile/tickets/";
+
+    try {
+        let response = await fetch(connectionString, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Token " + token
+            }
+        });
+
+        if (!response.ok) {
+            let errorText = await response.text();
+            console.error("Error loading contacts: ", response.status, errorText);
+            throw new Error(`HTTP-Error ${response.status}: ${errorText}`);
+        }
+
+        let data = await response.json();
+        return data;
+    } catch (error) {
         console.error("Network- or Servererror:", error);
     }
 }
