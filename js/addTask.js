@@ -117,16 +117,15 @@ function openOrCloseCheckBoxAreaForCategory() {
  * Generates HTML content for the checkbox area for assigned tasks.
  * @returns {string} HTML content.
  */
-function getCheckBoxAreaTemplateForAssigned() {
-    assigneds.sort((a, b) => a.name.localeCompare(b.name));
-    return assigneds
-        .map((assigned) => {
+function getCheckBoxAreaTemplateForAssigned() {    
+    this.assigneds.sort((a, b) => a.name.localeCompare(b.name));
+    return this.assigneds.map((assigned) => {
             let parts = assigned.name.split(" ");
             let firstName = parts[0];
             let lastName = parts.length > 1 ? parts[1] : "";
             return /*html*/ `
             <div class="item assigned-item ${assigned.selected ? "active" : ""}" onclick="toggleActiveAssignedItem(this)">
-                <div class="initialCircle margin-top" style="background-color: ${assigned.backgroundColor};">${firstName.charAt(0)}${lastName.charAt(0)}</div>
+                <div class="initialCircle" style="background-color: ${assigned.backgroundColor};">${firstName.charAt(0)}${lastName.charAt(0)}</div>
                 <label>${firstName} ${lastName}</label>
                 <input class="checkbox" type="checkbox" ${assigned.selected ? "checked" : ""}>
             </div>
@@ -158,7 +157,7 @@ function getCeckBoxAreaTemplateForCategory() {
 function toggleActiveAssignedItem(element) {
     let checkbox = element.querySelector(".checkbox");
     let label = element.querySelector("label").textContent.trim();
-    let assignedUser = assigneds.find((assigned) => assigned.name.trim() === label);
+    let assignedUser = this.assigneds.find((assigned) => assigned.name.trim() === label);
     if (assignedUser) {
         assignedUser.selected = !assignedUser.selected;
         checkbox.checked = assignedUser.selected;
