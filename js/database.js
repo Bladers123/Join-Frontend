@@ -184,3 +184,29 @@ async function updateTaskInDB(task) {
         console.error("Network- or Servererror:", error);
     }
 }
+
+async function deleteTaskFromDB(task) {
+    let conntectionString = `http://localhost:8000/api/profile/tickets/${task.id}/`;
+    let token = this.loggedUser.token;
+
+    try {
+        let response = await fetch(conntectionString, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Token " + token
+            },
+            body: JSON.stringify(task)
+        });
+
+        if (!response.ok) {
+            let errorText = await response.text();
+            console.error("Error delete contact: ", response.status, errorText);
+            throw new Error(`HTTP-Error ${response.status}: ${errorText}`);
+        }
+    }
+
+    catch (error) {
+        console.error("Network- or Servererror:", error);
+    }
+}

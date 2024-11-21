@@ -95,14 +95,6 @@ function allowDrop(event) {
     event.preventDefault();
 }
 
-
-
-
-
-
-
-
-
 /**
  * Moves a task to a specified category/progress section.
  * @param {string} category - The category to move the task to.
@@ -125,32 +117,6 @@ async function moveTo(category) {
         console.error("Element nicht gefunden in tasks");
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Generates HTML content for a task card.
@@ -365,8 +331,9 @@ function getTaskTemplate(task) {
  */
 async function deleteTask(taskId) {
     closeCardModal("cardModal-container");
+    const task = tasks.find((task) => task.id === taskId);
     tasks = tasks.filter((task) => task.id !== taskId);
-    await setItem("tasks", JSON.stringify(tasks));
+    await deleteTaskFromDB(task);
     updateTasks();
 }
 
