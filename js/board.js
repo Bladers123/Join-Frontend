@@ -21,7 +21,6 @@ let currentTaskModal = [];
  * @async
  */
 async function initBoard() {
-
     this.loggedUser = await getUserFromLocalStorage();
     if (this.loggedUser) {
         tasks = await getTaskFromDB();
@@ -305,7 +304,7 @@ async function toggleSubtaskCompleted(taskId, subtaskId) {
         let subtaskIndex = tasks[taskIndex].subtasks.findIndex((subtask) => subtask.id === subtaskId);
         if (subtaskIndex !== -1) {
             tasks[taskIndex].subtasks[subtaskIndex].completed = !tasks[taskIndex].subtasks[subtaskIndex].completed;
-            await setItem("tasks", JSON.stringify(tasks));
+            await updateTaskInDB(tasks[taskIndex]);
             updateTasks();
         }
     }

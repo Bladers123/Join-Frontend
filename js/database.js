@@ -157,9 +157,7 @@ async function getTaskFromDB() {
 }
 
 async function updateTaskInDB(task) {
-    let token = this.loggedUser.token;
-    console.log("Der Task: ", task);
-    
+    let token = this.loggedUser.token;    
     let connectionString = `http://localhost:8000/api/profile/tickets/${task.id}/`;
 
     try {
