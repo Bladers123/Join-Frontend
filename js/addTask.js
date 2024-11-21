@@ -276,9 +276,7 @@ async function createTask() {
         let tasks = await getTaskFromDB();
         tasks = tasks.concat(newTask);
         console.log("Neuer Task: ", newTask);
-        
         await insertTaskToDB(newTask)
-        return;
         document.getElementById("popup-container").innerHTML = getPopUpTemplate(message);
         if (!createdFromBoard) {
             setTimeout(function () {
@@ -306,16 +304,13 @@ function getTaskData() {
             backgroundColor: assigned.backgroundColor,
         }));
     let progress = this.progress;
-    // let id = new Date().getTime();
     let subtasksElements = Array.from(document.querySelectorAll(".new-subtask-text"));
     let subtasks = subtasksElements.map((subtaskElement) => ({
         title: subtaskElement.innerText || subtaskElement.textContent,
         completed: false,
-        // id: Math.random(),
     }));
 
     let currentTask = {
-        // id,
         title,
         description,
         dueDate,
