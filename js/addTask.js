@@ -275,7 +275,6 @@ async function createTask() {
     if (validate) {
         let tasks = await getTaskFromDB();
         tasks = tasks.concat(newTask);
-        console.log("Neuer Task: ", newTask);
         await insertTaskToDB(newTask)
         document.getElementById("popup-container").innerHTML = getPopUpTemplate(message);
         if (!createdFromBoard) {

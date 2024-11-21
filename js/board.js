@@ -108,36 +108,15 @@ function allowDrop(event) {
  * @param {string} category - The category to move the task to.
  * @async
  */
-// async function moveTo(category) {
-//     let foundIndex = tasks.findIndex((task) => task.id === currentDraggedElement);
-//     if (foundIndex !== -1) tasks[foundIndex].progress = category;
-//     else {
-//         console.error("Element nicht gefunden in tasks");
-//         return;
-//     }
-//     await updateTaskInDB(task);
-//     updateTasks();
-// }
-
-
-
-
-
 async function moveTo(category) {
     let foundIndex = tasks.findIndex((task) => task.id === currentDraggedElement);
 
     if (foundIndex !== -1) {
-        // Aktualisiere den Fortschritt des Tasks
         tasks[foundIndex].progress = category;
-
-        // Hole das zu aktualisierende Task-Objekt
         let taskToUpdate = tasks[foundIndex];
 
         try {
-            // Task im Backend aktualisieren
             await updateTaskInDB(taskToUpdate);
-
-            // Tasks im Frontend neu rendern
             updateTasks();
         } catch (error) {
             console.error("Fehler beim Aktualisieren des Tasks:", error);
