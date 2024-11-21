@@ -155,3 +155,32 @@ async function getTaskFromDB() {
         console.error("Network- or Servererror:", error);
     }
 }
+
+async function updateTaskInDB(task) {
+    let token = this.loggedUser.token;
+    console.log("Der Task: ", task);
+    
+    let connectionString = `http://localhost:8000/api/profile/tickets/${task.id}/`;
+
+    try {
+        let response = await fetch(connectionString, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Token " + token
+            },
+            body: JSON.stringify(task)
+        });
+
+        if (!response.ok) {
+            let errorText = await response.text();
+            console.error("Error loading contacts: ", response.status, errorText);
+            throw new Error(`HTTP-Error ${response.status}: ${errorText}`);
+        }
+
+        let data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("Network- or Servererror:", error);
+    }
+}
