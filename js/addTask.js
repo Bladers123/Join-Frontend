@@ -275,8 +275,9 @@ async function createTask() {
     if (validate) {
         let tasks = await getTaskFromDB();
         tasks = tasks.concat(newTask);
+        console.log("Neuer Task: ", newTask);
+        
         await insertTaskToDB(newTask)
-        console.log(newTask);
         return;
         document.getElementById("popup-container").innerHTML = getPopUpTemplate(message);
         if (!createdFromBoard) {
@@ -300,21 +301,21 @@ function getTaskData() {
     let dueDate = document.getElementById("input-due-date").value;
     let priority = document.querySelector(".prioButtons button.active").innerText.trim();
     let category = document.getElementById("category-text").textContent;
-    let selectedAssigneds = assigneds.filter((assigned) => assigned.selected).map((assigned) => ({
+    let selectedAssigneds = this.assigneds.filter((assigned) => assigned.selected).map((assigned) => ({
             name: assigned.name,
             backgroundColor: assigned.backgroundColor,
         }));
     let progress = this.progress;
-    let id = new Date().getTime();
+    // let id = new Date().getTime();
     let subtasksElements = Array.from(document.querySelectorAll(".new-subtask-text"));
     let subtasks = subtasksElements.map((subtaskElement) => ({
         title: subtaskElement.innerText || subtaskElement.textContent,
         completed: false,
-        id: Math.random(),
+        // id: Math.random(),
     }));
 
     let currentTask = {
-        id,
+        // id,
         title,
         description,
         dueDate,
