@@ -73,7 +73,7 @@ async function updateTasks() {
     document.getElementById("feedback").innerHTML = "";
     document.getElementById("done").innerHTML = "";
 
-    tasks.forEach((taskData) => {
+    tasks.forEach((taskData) => {        
         sections[taskData.progress].innerHTML += getCardModal(taskData);
     });
 }
@@ -140,7 +140,7 @@ function getCardModal(task) {
 function getCircleTemplate(task) {
     return task.assignedTo.map((person) => {
         let initials = person.name.split(" ").map((namePart) => namePart.charAt(0)).join("");
-        let backgroundColor = person.bg ? ` style="background-color: ${person.bg};"` : "";
+        let backgroundColor = person.backgroundColor ? ` style="background-color: ${person.backgroundColor};"` : "";
         return `<div class="profileBadge"${backgroundColor}>${initials}</div>`;
     }).join("");
 }
@@ -268,7 +268,7 @@ function getAssignedToTemplate(assignedTo) {
         return /*html*/ `
             <div class="assignedContact">
                 <div class="nameCircleWrapper">
-                    <div class="nameCircle" style="background-color: ${person.bg};">${initials}</div>
+                    <div class="nameCircle" style="background-color: ${person.backgroundColor};">${initials}</div>
                     <p class="assignedName">${person.name}</p>
                 </div>
             </div>`;
@@ -355,9 +355,10 @@ async function loadAddTaskTemplate(progress) {
  * @returns {Array<Object>} Array of selected users with their name and background color.
  */
 function getSelectedAssigneds() {
-    return assigneds.filter((assigned) => assigned.selected).map((assigned) => {
+    console.log(this.assigneds);
+    return this.assigneds.filter((assigned) => assigned.selected).map((assigned) => {        
         return {
-            name: assigned.name, bg: assigned.bg,
+            name: assigned.name, backgroundColor: assigned.backgroundColor,
         };
     });
 }
@@ -392,13 +393,14 @@ async function saveEditTask() {
             task.priority = document.querySelector(".prioButtons button.active").innerText.trim();
             task.subtasks = getUpdatedSubtasks();
             task.assignedTo = getSelectedAssigneds();
+            console.log("Task assignedTo: ", task.assignedTo);
             taskUpdated = true;
             updatedTask = task;
             break;
         }
     }
     if (taskUpdated) {
-        console.log(updatedTask);
+        console.log("Updated Task: ", updatedTask);
         
         await updateTaskInDB(updatedTask);
         updateTasks();
@@ -417,7 +419,7 @@ function editAssignsArray() {
     for (let a = 0; a < assigns.length; a++) {
         const assign = assigns[a];
         let editAssign = assign["name"];
-        let editColor = assign["bg"];
+        let editColor = assign["backgroundColor"];
         let initials = editAssign.split(" ").map((editAssign) => editAssign[0]).join("");
         assignsContainer.innerHTML += `<div class="editCircleStyle">
         <div class="editprofileBadge" style="background-color:${editColor}">${initials}</div>
