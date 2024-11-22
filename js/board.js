@@ -387,7 +387,7 @@ function setEditValuesOfTaskModal() {
     document.getElementById("input-due-date").value = currentTaskModal.dueDate;
     selectAssignedPersons();
     updateAssignedItemsUI();
-    editAssignsArray();
+    //editAssignsArray();
     editSubtasksArray();
     document.getElementById("medium-button-id").classList.add("active");
 }
