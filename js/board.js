@@ -398,7 +398,9 @@ async function saveEditTask() {
         }
     }
     if (taskUpdated) {
-        await setItem("tasks", JSON.stringify(tasks));
+        console.log(updatedTask);
+        
+        await updateTaskInDB(updatedTask);
         updateTasks();
     }
     document.getElementById("cardModalID").innerHTML = getTaskTemplate(updatedTask);
