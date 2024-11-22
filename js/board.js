@@ -24,6 +24,8 @@ async function initBoard() {
     this.loggedUser = await getUserFromLocalStorage();
     if (this.loggedUser) {
         tasks = await getTaskFromDB();
+        console.log("Meine Tasks:", tasks);
+        
         updateTasks();
     }
     else
@@ -252,10 +254,20 @@ async function editTask() {
 function openCardModal(taskId) {
     let task = tasks.find((task) => task.id.toString() === taskId.toString());
     if (task) {
+        // Setze currentTaskModal auf das ausgewählte Task-Objekt
+        currentTaskModal = task;
+
+        // Füge die Eigenschaft "selected" zu allen assignedTo-Objekten hinzu
+        currentTaskModal.assignedTo.forEach((assigned) => {
+            assigned.selected = true; // Markiere alle assoziierten Personen als ausgewählt
+        });
+
+        // Öffne das Modal mit den aktualisierten Daten
         document.getElementById("cardModalID").innerHTML = getTaskTemplate(task);
         document.getElementById('hidden-overflow').classList.add('height100');
     }
 }
+
 
 /**
  * Generates HTML for displaying assigned users in the task modal.
@@ -281,7 +293,7 @@ function getAssignedToTemplate(assignedTo) {
  * @param {string|number} taskId - The identifier of the task.
  * @returns {string} HTML string for displaying subtasks.
  */
-function getSubtasksTemplate(subtasks, taskId) {
+function getSubtasksTemplate(subtasks, taskId) {    
     return subtasks.map((subtask) => {
         const isChecked = subtask.completed ? "checked" : "";
         return /*html*/ `
@@ -355,13 +367,16 @@ async function loadAddTaskTemplate(progress) {
  * @returns {Array<Object>} Array of selected users with their name and background color.
  */
 function getSelectedAssigneds() {
-    console.log(this.assigneds);
-    return this.assigneds.filter((assigned) => assigned.selected).map((assigned) => {        
-        return {
-            name: assigned.name, backgroundColor: assigned.backgroundColor,
-        };
-    });
+    return this.assigneds.filter((assigned) => assigned.selected).map((assigned) => {
+            return {
+                // Nur IDs für bestehende Assigned-Objekte mitsenden
+                ...(assigned.id && { id: parseInt(assigned.id) }),
+                name: assigned.name,
+                backgroundColor: assigned.backgroundColor,
+            };
+        });
 }
+
 
 /**
  * Sets the input fields in the edit task modal with the current task's data.
@@ -384,6 +399,7 @@ function setEditValuesOfTaskModal() {
 async function saveEditTask() {
     let taskUpdated = false;
     let updatedTask = null;
+
     for (let i = 0; i < tasks.length; i++) {
         let task = tasks[i];
         if (task.id === currentTaskModal.id) {
@@ -393,19 +409,35 @@ async function saveEditTask() {
             task.priority = document.querySelector(".prioButtons button.active").innerText.trim();
             task.subtasks = getUpdatedSubtasks();
             task.assignedTo = getSelectedAssigneds();
-            console.log("Task assignedTo: ", task.assignedTo);
             taskUpdated = true;
             updatedTask = task;
             break;
         }
     }
+
     if (taskUpdated) {
-        console.log("Updated Task: ", updatedTask);
-        
-        await updateTaskInDB(updatedTask);
+        console.log("Payload für PUT-Request:", updatedTask); // Debug: Logge die gesendeten Daten
+        await updateTaskInDB(updatedTask); // PUT-Request ausführen
         updateTasks();
     }
+
     document.getElementById("cardModalID").innerHTML = getTaskTemplate(updatedTask);
+}
+
+function openOrCloseCheckBoxAreaForAssigneds() {
+    console.log("scheiss funktion");
+    updateAssignedItemsUI();
+    let checkBoxItems = document.getElementById("checkBoxItemsAssigned");
+    rotateIcon("nav-image-assigned");
+    if (checkBoxItems.innerHTML.trim() !== "") {
+        checkBoxItems.innerHTML = "";
+        document.body.style.overflow = "";
+    }
+    else {
+        document.body.style.overflow = "hidden";
+        checkBoxItems.innerHTML = getCheckBoxAreaTemplateForAssigned();
+    }
+    
 }
 
 /**
@@ -448,11 +480,22 @@ function editSubtasksArray() {
 function getUpdatedSubtasks() {
     let updatedSubtasks = [];
     let subtaskElements = document.querySelectorAll(".new-subtask-text");
-    subtaskElements.forEach((element, index) => {
-        updatedSubtasks.push({ id: index + 1, title: element.textContent, completed: false });
+
+    subtaskElements.forEach((element) => {
+        let subtaskId = element.dataset.id; // Bestehende Subtask-IDs aus dem DOM
+        updatedSubtasks.push({
+            // Nur vorhandene IDs mitsenden, neue Subtasks haben keine ID
+            ...(subtaskId && { id: parseInt(subtaskId) }),
+            title: element.textContent,
+            completed: element.dataset.completed === "true",
+        });
     });
+
     return updatedSubtasks;
 }
+
+
+
 
 /**
  * Selects assigned persons based on the current task modal's assignedTo data.
@@ -471,16 +514,28 @@ function selectAssignedPersons() {
  * Updates the UI to reflect the current task's assigned users.
  */
 function updateAssignedItemsUI() {
-    assigneds.forEach((assigned) => {
-        if (assigned.selected) {
-            let element = document.querySelector(`.assigned-item[data-name="${assigned.name}"]`);
-            if (element) {
-                let checkbox = element.querySelector(".checkbox");
+    console.log("dsfdsfds");
+    currentTaskModal.assignedTo.forEach((assigned) => {
+        const element = document.querySelector(`.assigned-item[data-name="${assigned.name}"]`); 
+        console.log(assigned.selected);
+        if (element) {  
+            console.log("test");
+                      
+            const checkbox = element.querySelector(".checkbox");
+            console.log();
+            
+            if (checkbox && assigned.selected) {
+                console.log("pup");
+                
                 checkbox.checked = true;
                 element.classList.add("active");
+            } else if (checkbox) {
+                checkbox.checked = false;
+                element.classList.remove("active");
             }
         }
     });
     updateActiveInitialCircles();
 }
+
 
