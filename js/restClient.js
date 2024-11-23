@@ -185,15 +185,34 @@ async function deleteTaskFromDB(task) {
     }
 }
 
+async function registerRequest(userData) {
+    let connectionString = "http://127.0.0.1:8000/api/register/";
 
-/**
- * Performs the login by sending the entered email and password to the backend.
- * If the user is found, it stores the token and navigates to the summary page.
- * If login fails, an error message is displayed.
- * @async
- */
+    if (userData.username.startsWith('guest')) {
+        connectionString = "http://127.0.0.1:8000/api/register_guest/";
+    }
+
+    try {
+        let response = await fetch(connectionString, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData),
+        });
+
+        if (!response.ok) {
+            console.error("Error registering user:", response.status, response.statusText);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Network- or Servererror during registration:", error.message || error);
+        return false;
+    }
+}
+
 async function loginRequest(userData) {
-    let connectionString = "http://localhost:8000/api/login/";
+    let connectionString = "http://127.0.0.1:8000/api/login/";
 
     try {
         let response = await fetch(connectionString, {
@@ -207,6 +226,9 @@ async function loginRequest(userData) {
             })
         });
 
+        console.log(response);
+        
+
         if (response.ok) {
             let data = await response.json();
 
@@ -218,36 +240,13 @@ async function loginRequest(userData) {
             };
 
             localStorage.setItem("user", JSON.stringify(user));
-            
             return true;
-        } else 
-            false
-    
-    } catch (error) {
-        console.error("Network- or Servererror:", error);
-    }
-}
-
-async function registerRequest(userData) {
-    const connectionString = "http://127.0.0.1:8000/api/register/";
-
-    try {
-        let response = await fetch(connectionString, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData),
-        });
-
-        if (!response.ok) {
-            console.error("Error register user: ", response.status, response.statusText);
-            return false
+        } else {
+            console.error("Error login user:", response.status, response.statusText);
+            return false;
         }
-        else
-            return true;
-
-    }
-
-    catch (error) {
-        console.error("Network- or Servererror:", error);
+    } catch (error) {
+        console.error("Network- or Servererror during login:", error.message || error);
+        return false;
     }
 }

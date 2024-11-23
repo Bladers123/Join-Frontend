@@ -10,9 +10,19 @@ function navToSignIn() {
  * @async
  */
 async function loginGuest() {
-    user = [];
-    await setItem("user", JSON.stringify(user));
-    window.location.href = "../../html/summary.html";
+    const newGuestUser = {
+        username: `guest_${Date.now()}`,
+        email: `guest_${Date.now()}@guest.de`,
+        password: Math.random().toString(36).slice(-8)
+    };
+
+    let isRegisterSuccessful = await registerRequest(newGuestUser);
+    if (isRegisterSuccessful) {
+        let isLoginSuccessful = await loginRequest(newGuestUser);
+        if (isLoginSuccessful) {
+            window.location.href = "../../html/summary.html";
+        }
+    }
 }
 
 async function loginUser() {
@@ -21,9 +31,9 @@ async function loginUser() {
         "password": document.getElementById("passwordInput").value
     };
 
-    let isRequestSuccessfull = await loginRequest(userData);
+    let isSuccessfull = await loginRequest(userData);
 
-    if (isRequestSuccessfull) {
+    if (isSuccessfull) {
         window.location.href = "../../html/summary.html";
     }
     else {
