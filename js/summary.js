@@ -6,9 +6,15 @@ let user = [];
  * @async
  */
 async function initSummary() {
-    tasks = JSON.parse((await getItem("tasks")) || "[]");
-    user = JSON.parse((await getItem("users")) || "[]");
-    showAmounts();
+    this.loggedUser = await getUserFromLocalStorage();
+    this.user = this.loggedUser;
+
+    if (this.loggedUser) {
+        tasks = await getTasksFromDB();
+        showAmounts();
+    }
+    else
+        window.location.href = "../../html/user-login/log-in.html";
 }
 
 /**
@@ -45,9 +51,11 @@ function showAmounts() {
 
     for (let t = 0; t < tasks.length; t++) {
         const task = tasks[t];
-        if (task.priority === "Urgent") prioUrgent.push(task.priority);
+        if (task.priority === "Urgent") 
+            prioUrgent.push(task.priority);
 
-        if (!earliestDueDate || task.dueDate < earliestDueDate) earliestDueDate = task.dueDate;
+        if (!earliestDueDate || task.dueDate < earliestDueDate) 
+            earliestDueDate = task.dueDate;
 
         newDate = getFormattedDate(earliestDueDate);
         pushProgress(task, toDos, feedbacks, dones, inProgresses);
@@ -114,8 +122,8 @@ function renderAllData(toDos, dones, feedbacks, inProgresses, prioUrgent, earlie
     document.getElementById("font-urgent-number").innerHTML = prioUrgent.length;
     document.getElementById("earliest-due-date").innerHTML = earliestDueDate;
     document.getElementById("greet-time").innerHTML = getGreetingTime();
-    if (user.name) {
-        document.getElementById("greet-user").innerHTML = user.name;
+    if (this.user.username) {
+        document.getElementById("greet-user").innerHTML = this.user.username;
     } else {
         document.getElementById("greet-user").innerHTML = "Dear Guest";
     }

@@ -23,7 +23,7 @@ let currentTaskModal = [];
 async function initBoard() {
     this.loggedUser = await getUserFromLocalStorage();
     if (this.loggedUser) {
-        tasks = await getTaskFromDB();
+        tasks = await getTasksFromDB();
         updateTasks();
     }
     else

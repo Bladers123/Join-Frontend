@@ -114,7 +114,7 @@ async function deleteContactFromDB(contact) {
         }
     }
 
-    async function getTaskFromDB() {
+    async function getTasksFromDB() {
         let token = this.loggedUser.token;
         let connectionString = "http://localhost:8000/api/profile/tickets/";
 

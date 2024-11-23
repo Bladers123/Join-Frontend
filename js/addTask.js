@@ -273,7 +273,7 @@ async function createTask() {
     let validate = isCategoryValidated(newTask.category);
     let message = 'Task added to board';
     if (validate) {
-        let tasks = await getTaskFromDB();
+        let tasks = await getTasksFromDB();
         tasks = tasks.concat(newTask);
         await insertTaskToDB(newTask)
         document.getElementById("popup-container").innerHTML = getPopUpTemplate(message);
