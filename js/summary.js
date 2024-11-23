@@ -14,7 +14,7 @@ async function initSummary() {
         showAmounts();
     }
     else
-        window.location.href = "../../html/user-login/log-in.html";
+        window.location.href = "../html/login.html";
 }
 
 /**

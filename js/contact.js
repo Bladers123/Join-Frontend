@@ -41,7 +41,7 @@ async function initContacts() {
     if (this.loggedUser)
         await renderContacts();
     else
-        window.location.href = "../../html/user-login/log-in.html";
+        window.location.href = "../html/login.html";
 }
 
 /**

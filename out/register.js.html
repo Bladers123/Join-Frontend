@@ -62,7 +62,7 @@ async function register() {
             await setItem("users", JSON.stringify(users));
             document.getElementById("popup-container").innerHTML = getPopUpTemplate();
             setTimeout(function () {
-                window.location.href = "../../html/user-login/log-in.html";
+                window.location.href = "../html/login.html";
             }, 1000);
         }
         await loadUsers();
@@ -73,7 +73,7 @@ async function register() {
  * Navigates the user back to the login page.
  */
 function backToLogIn() {
-    window.location.href = "log-in.html";
+    window.location.href = "login.html";
 }
 
 /**

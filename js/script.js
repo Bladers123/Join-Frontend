@@ -71,5 +71,5 @@ async function getUserFromLocalStorage() {
 
 function logout() {    
     localStorage.removeItem("user");
-    window.location.href = "user-login/log-in.html";
+    window.location.href = "login.html";
 }

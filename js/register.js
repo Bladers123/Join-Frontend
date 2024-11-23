@@ -1,50 +1,4 @@
 /**
- * Registers a new user if the password is confirmed. Sends the registration request to the backend.
- * Handles server or network errors by displaying appropriate messages.
- * Redirects to the login page upon successful registration.
- * @async
- */
-async function register() {
-    if (!isPasswordConfirmed()) return;
-
-    const newUser = {
-        username: inputName.value,
-        email: inputEmail.value,
-        password: inputPassword.value,
-    };
-
-    const connectionString = "http://127.0.0.1:8000/api/auth/register/";
-
-    try {
-        const response = await sendRegistrationRequest(connectionString, newUser);
-        if (!response.ok) {
-            await handleRegistrationError(response);
-            return;
-        }
-        handleRegistrationSuccess();
-    } catch (error) {
-        handleNetworkError(error);
-    }
-}
-
-/**
- * Sends the registration request to the backend with the provided user data.
- * @async
- * @param {string} url - The endpoint URL for the registration request.
- * @param {Object} userData - The new user data, containing username, email, and password.
- * @returns {Promise<Response>} - The response from the server.
- */
-async function sendRegistrationRequest(url, userData) {
-    return await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-    });
-}
-
-/**
  * Handles registration errors returned from the server response.
  * Displays an error message to the user based on the response details.
  * @async
@@ -64,6 +18,32 @@ async function handleRegistrationError(response) {
     }
 }
 
+/**
+ * Handles the user registration process, including UI feedback.
+ * @async
+ */
+async function register() {
+    if (!isPasswordConfirmed())
+        return;
+
+    const newUser = {
+        username: inputName.value,
+        email: inputEmail.value,
+        password: inputPassword.value,
+    };
+
+    try {
+        const isRequestSuccessfull = await registerRequest(newUser);
+
+        if (isRequestSuccessfull)
+            handleRegistrationSuccess();
+        else
+            handleRegistrationError(errorData);
+    } catch (error) {
+        handleNetworkError(error);
+    }
+}
+
 
 /**
  * Displays a success message for successful registration and redirects to the login page.
@@ -73,7 +53,7 @@ function handleRegistrationSuccess() {
     const message = 'You Signed Up successfully';
     document.getElementById("popup-container").innerHTML = getPopUpTemplate(message);
     setTimeout(() => {
-        window.location.href = "../../html/user-login/log-in.html";
+        window.location.href = "../html/login.html";
     }, 1000);
 }
 
@@ -94,7 +74,7 @@ function handleNetworkError(error) {
  * Navigates the user back to the login page.
  */
 function backToLogIn() {
-    window.location.href = "log-in.html";
+    window.location.href = "login.html";
 }
 
 

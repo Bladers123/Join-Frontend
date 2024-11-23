@@ -53,7 +53,7 @@ async function initTask(progress = "toDo") {
         this.assigneds = await getContactsFromDB();
     }
     else
-        window.location.href = "../../html/user-login/log-in.html";
+        window.location.href = "../html/login.html";
 }
 
 document.addEventListener("DOMContentLoaded", function () {
