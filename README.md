@@ -1,5 +1,5 @@
 # Projekt-Setup-Anleitung JOIN (Frontend)
-## Diese Anleitung beschreibt die Schritte zur Installation und Konfiguration des Projekts VS-Code.
+## Diese Anleitung beschreibt die Schritte zur Installation und Konfiguration des Projekts Join in VS-Code.
 
 ## Installation und Einrichtung
   Lade dir VS-Code herunter und starte es. Öffne das Projekt (Folder) Join-Frontend.
