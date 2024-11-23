@@ -24,8 +24,6 @@ async function initBoard() {
     this.loggedUser = await getUserFromLocalStorage();
     if (this.loggedUser) {
         tasks = await getTaskFromDB();
-        console.log("Meine Tasks:", tasks);
-        
         updateTasks();
     }
     else
@@ -416,8 +414,7 @@ async function saveEditTask() {
     }
 
     if (taskUpdated) {
-        console.log("Payload für PUT-Request:", updatedTask); // Debug: Logge die gesendeten Daten
-        await updateTaskInDB(updatedTask); // PUT-Request ausführen
+        await updateTaskInDB(updatedTask); 
         updateTasks();
     }
 
@@ -425,7 +422,6 @@ async function saveEditTask() {
 }
 
 function openOrCloseCheckBoxAreaForAssigneds() {
-    console.log("scheiss funktion");
     updateAssignedItemsUI();
     let checkBoxItems = document.getElementById("checkBoxItemsAssigned");
     rotateIcon("nav-image-assigned");
@@ -514,19 +510,11 @@ function selectAssignedPersons() {
  * Updates the UI to reflect the current task's assigned users.
  */
 function updateAssignedItemsUI() {
-    console.log("dsfdsfds");
     currentTaskModal.assignedTo.forEach((assigned) => {
         const element = document.querySelector(`.assigned-item[data-name="${assigned.name}"]`); 
-        console.log(assigned.selected);
-        if (element) {  
-            console.log("test");
-                      
-            const checkbox = element.querySelector(".checkbox");
-            console.log();
-            
+        if (element) {            
+            const checkbox = element.querySelector(".checkbox");            
             if (checkbox && assigned.selected) {
-                console.log("pup");
-                
                 checkbox.checked = true;
                 element.classList.add("active");
             } else if (checkbox) {
