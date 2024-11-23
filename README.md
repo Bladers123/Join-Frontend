@@ -1,4 +1,4 @@
-# Projekt-Setup-Anleitung für Python 3.12.7
+# Projekt-Setup-Anleitung JOIN (Frontend)
 ## Diese Anleitung beschreibt die Schritte zur Installation und Konfiguration des Projekts VS-Code.
 
 ## Installation und Einrichtung
