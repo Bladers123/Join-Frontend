@@ -34,13 +34,10 @@ async function includeHTML() {
  */
 async function setUserInitialsInHeaderTemplateButton() {
     let button = document.getElementById("user-button-initials");
-    let user = getUserFromLocalStorage();
-    if (button && user.username) {
-        button.innerHTML = user.username
-            .split(" ")
-            .map((part) => part[0].toUpperCase())
-            .join("");
-    }
+    let user = await getUserFromLocalStorage();
+    
+    if (button && user.username)
+        button.innerHTML = user.username.split(" ").map((part) => part[0].toUpperCase()).join("");
 }
 
 /**
