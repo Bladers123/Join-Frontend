@@ -353,13 +353,24 @@ function editSubTaskClick(uniqueId, event) {
  */
 function editSubTask(id) {
     let subtaskContainer = document.getElementById(id);
-    if (!subtaskContainer)
-        return;
+    if (!subtaskContainer) return;
+
+    // Sicherstellen, dass kein weiteres Eingabefeld erstellt wird, wenn schon eins existiert
     let subtaskTextElement = subtaskContainer.querySelector(".new-subtask-text");
+    let existingInput = subtaskTextElement.querySelector(".subtask-edit-field");
+    if (existingInput) {
+        existingInput.focus(); // Fokussiere das bestehende Eingabefeld
+        return;
+    }
+
     let currentText = subtaskTextElement.innerText;
+
+    // Konvertiere den Text in ein Eingabefeld
     subtaskTextElement.innerHTML = `<input class="subtask-edit-field" type="text" value="${currentText}" onblur="saveEditedSubTask('${id}', this.value)">`;
-    subtaskTextElement.querySelector("input").focus();
+    let inputField = subtaskTextElement.querySelector(".subtask-edit-field");
+    inputField.focus();
 }
+
 
 /**
  * Saves the edited text of a subtask.

@@ -110,10 +110,10 @@ async function moveTo(category) {
             await updateTaskInDB(taskToUpdate);
             updateTasks();
         } catch (error) {
-            console.error("Fehler beim Aktualisieren des Tasks:", error);
+            console.error("Error when updating the task:", error);
         }
     } else {
-        console.error("Element nicht gefunden in tasks");
+        console.error("Element not found in tasks");
     }
 }
 
@@ -406,9 +406,7 @@ async function saveEditTask() {
             task.description = document.getElementById("textArea-description").value;
             task.dueDate = document.getElementById("input-due-date").value;
             task.priority = document.querySelector(".prioButtons button.active").innerText.trim();
-            console.log("Vorher: ", task.subtasks);  
             task.subtasks = getUpdatedSubtasks();
-            console.log("Nachher: ", task.subtasks);
             task.assignedTo = getSelectedAssigneds();
             taskUpdated = true;
             updatedTask = task;
