@@ -422,7 +422,8 @@ async function saveEditTask() {
         updateTasks();
     }
 
-    document.getElementById("cardModalID").innerHTML = getTaskTemplate(updatedTask);
+    closeCardModal("cardModal-container");
+    // document.getElementById("cardModalID").innerHTML = getTaskTemplate(updatedTask);
 }
 
 function openOrCloseCheckBoxAreaForAssigneds() {
