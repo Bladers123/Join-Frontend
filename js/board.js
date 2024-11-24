@@ -409,12 +409,14 @@ async function saveEditTask() {
             task.assignedTo = getSelectedAssigneds();
             taskUpdated = true;
             updatedTask = task;
+            console.log("Neue Subtasks: ", updatedTask.subtasks);
             break;
         }
     }
 
     if (taskUpdated) {
         await updateTaskInDB(updatedTask); 
+        tasks = await getTasksFromDB();
         updateTasks();
     }
 
@@ -475,20 +477,32 @@ function editSubtasksArray() {
  */
 function getUpdatedSubtasks() {
     let updatedSubtasks = [];
-    let subtaskElements = document.querySelectorAll(".new-subtask-text");
+    let subtaskElements = document.querySelectorAll(".new-sub-task-container");
 
     subtaskElements.forEach((element) => {
-        let subtaskId = element.dataset.id; // Bestehende Subtask-IDs aus dem DOM
-        updatedSubtasks.push({
-            // Nur vorhandene IDs mitsenden, neue Subtasks haben keine ID
-            ...(subtaskId && { id: parseInt(subtaskId) }),
-            title: element.textContent,
-            completed: element.dataset.completed === "true",
-        });
+        let subtaskId = element.getAttribute('data-id');
+        let title = element.querySelector('.new-subtask-text').textContent.trim();
+
+        if (subtaskId && !isNaN(parseInt(subtaskId, 10))) {
+            updatedSubtasks.push({
+                id: parseInt(subtaskId, 10),
+                title: title,
+                completed: false,
+            });
+        } else {
+
+            updatedSubtasks.push({
+                title: title,
+                completed: false, 
+            });
+        }
     });
 
     return updatedSubtasks;
 }
+
+
+
 
 
 
