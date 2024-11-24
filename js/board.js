@@ -401,15 +401,17 @@ async function saveEditTask() {
     for (let i = 0; i < tasks.length; i++) {
         let task = tasks[i];
         if (task.id === currentTaskModal.id) {
+            
             task.title = document.getElementById("input-title").value;
             task.description = document.getElementById("textArea-description").value;
             task.dueDate = document.getElementById("input-due-date").value;
             task.priority = document.querySelector(".prioButtons button.active").innerText.trim();
+            console.log("Vorher: ", task.subtasks);  
             task.subtasks = getUpdatedSubtasks();
+            console.log("Nachher: ", task.subtasks);
             task.assignedTo = getSelectedAssigneds();
             taskUpdated = true;
             updatedTask = task;
-            console.log("Neue Subtasks: ", updatedTask.subtasks);
             break;
         }
     }
@@ -467,14 +469,15 @@ function editSubtasksArray() {
     for (let i = 0; i < subtasks.length; i++) {
         let subtask = subtasks[i];
         let editSubtask = subtask.title;
-        subtaskContainer.innerHTML += generateEditSubtasksHTML(subtask.id, editSubtask);
+        subtaskContainer.innerHTML += generateEditSubtasksHTML(subtask.id, editSubtask, subtask.completed);
     }
 }
 
-/**
- * Returns an array of updated subtasks based on user input in the UI.
- * @returns {Array<Object>} Array of updated subtasks.
- */
+
+
+
+
+
 function getUpdatedSubtasks() {
     let updatedSubtasks = [];
     let subtaskElements = document.querySelectorAll(".new-sub-task-container");
@@ -482,24 +485,38 @@ function getUpdatedSubtasks() {
     subtaskElements.forEach((element) => {
         let subtaskId = element.getAttribute('data-id');
         let title = element.querySelector('.new-subtask-text').textContent.trim();
+        let completed = element.getAttribute('data-completed') === "true"; // Lesen des Status
 
         if (subtaskId && !isNaN(parseInt(subtaskId, 10))) {
             updatedSubtasks.push({
                 id: parseInt(subtaskId, 10),
                 title: title,
-                completed: false,
+                completed: completed, // Status übernehmen
             });
         } else {
-
             updatedSubtasks.push({
                 title: title,
-                completed: false, 
+                completed: false, // Standardwert
             });
         }
     });
 
     return updatedSubtasks;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

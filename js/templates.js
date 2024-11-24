@@ -560,13 +560,14 @@ function editTaskTemplate() {
  * @param {string} editSubtask - The text content of the subtask.
  * @returns {string} HTML content for editing subtasks.
  */
-function generateEditSubtasksHTML(uniqueId, editSubtask) {
+function generateEditSubtasksHTML(uniqueId, editSubtask, isCompleted) {
     return /*html*/ `
     <div 
         onclick="editSubTask('${uniqueId}')" 
         class="new-sub-task-container" 
         id="${uniqueId}" 
-        data-id="${uniqueId}">
+        data-id="${uniqueId || ''}" 
+        data-completed="${isCompleted}">
         <li class="new-subtask-text">${editSubtask}</li>
         <div class="new-subtask-image-container">
             <img onclick="editSubTaskClick('${uniqueId}', event)" src="../img/edit.png" alt="edit">
@@ -574,6 +575,8 @@ function generateEditSubtasksHTML(uniqueId, editSubtask) {
         </div>
     </div>`;
 }
+
+
 
 
 /**
