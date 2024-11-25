@@ -117,20 +117,20 @@ function openOrCloseCheckBoxAreaForCategory() {
  * Generates HTML content for the checkbox area for assigned tasks.
  * @returns {string} HTML content.
  */
-function getCheckBoxAreaTemplateForAssigned() {    
+function getCheckBoxAreaTemplateForAssigned() {
     this.assigneds.sort((a, b) => a.name.localeCompare(b.name));
     return this.assigneds.map((assigned) => {
-            let parts = assigned.name.split(" ");
-            let firstName = parts[0];
-            let lastName = parts.length > 1 ? parts[1] : "";
-            return /*html*/ `
+        let parts = assigned.name.split(" ");
+        let firstName = parts[0];
+        let lastName = parts.length > 1 ? parts[1] : "";
+        return /*html*/ `
             <div class="item assigned-item ${assigned.selected ? "active" : ""}" onclick="toggleActiveAssignedItem(this)">
                 <div class="initialCircle" style="background-color: ${assigned.backgroundColor};">${firstName.charAt(0)}${lastName.charAt(0)}</div>
                 <label>${firstName} ${lastName}</label>
                 <input class="checkbox" type="checkbox" ${assigned.selected ? "checked" : ""}>
             </div>
         `;
-        })
+    })
         .join("");
 }
 
@@ -269,7 +269,7 @@ document.addEventListener("DOMContentLoaded", function () {
  * @async
  */
 async function createTask() {
-    let newTask = getTaskData();    
+    let newTask = getTaskData();
     let validate = isCategoryValidated(newTask.category);
     let message = 'Task added to board';
     if (validate) {
@@ -277,14 +277,9 @@ async function createTask() {
         tasks = tasks.concat(newTask);
         await insertTaskToDB(newTask)
         document.getElementById("popup-container").innerHTML = getPopUpTemplate(message);
-        if (!createdFromBoard) {
-            setTimeout(function () {
-                window.location.href = "../html/board.html";
-            }, 1000);
-        } else if (createdFromBoard) {
-            closeCardModal("addTaskModal");
-            initBoard();
-        }
+        setTimeout(function () {
+            window.location.href = "../html/board.html";
+        }, 1000);
     }
 }
 
@@ -299,9 +294,9 @@ function getTaskData() {
     let priority = document.querySelector(".prioButtons button.active").innerText.trim();
     let category = document.getElementById("category-text").textContent;
     let selectedAssigneds = this.assigneds.filter((assigned) => assigned.selected).map((assigned) => ({
-            name: assigned.name,
-            backgroundColor: assigned.backgroundColor,
-        }));
+        name: assigned.name,
+        backgroundColor: assigned.backgroundColor,
+    }));
     let progress = this.progress;
     let subtasksElements = Array.from(document.querySelectorAll(".new-subtask-text"));
     let subtasks = subtasksElements.map((subtaskElement) => ({
